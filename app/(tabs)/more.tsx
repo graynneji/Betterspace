@@ -1,3 +1,4 @@
+import { useCheckAuth } from '@/context/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -65,12 +66,11 @@ const More: React.FC = () => {
     const [biometricAuth, setBiometricAuth] = useState<boolean>(false);
 
     const { loading, logout } = useAuth()
-
+    const { session, loading: isPending } = useCheckAuth()
     const handleSaveProfile = () => {
         setIsEditing(false);
         Alert.alert('Success', 'Profile updated successfully!');
     };
-
 
     const handleChangePassword = () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -98,8 +98,8 @@ const More: React.FC = () => {
                         <View style={styles.profileHeader}>
                             <Image source={{ uri: user.avatar }} style={styles.avatar} />
                             <View style={styles.profileInfo}>
-                                <Text style={styles.userName}>{user.name}</Text>
-                                <Text style={styles.userRole}>Therapy Client</Text>
+                                <Text style={styles.userName}>{session?.user?.user_metadata?.full_name}</Text>
+                                <Text style={styles.userRole}>{session?.user?.user_metadata?.designation === "patient" ? "Therapy Client" : "Therapy provider"}</Text>
                                 <Text style={styles.therapistInfo}>
                                     Therapist: {user.therapistName}
                                 </Text>
@@ -119,7 +119,7 @@ const More: React.FC = () => {
                                 <Text style={styles.label}>Full Name</Text>
                                 <TextInput
                                     style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={user.name}
+                                    value={session?.user?.user_metadata?.full_name}
                                     onChangeText={(text) => setUser({ ...user, name: text })}
                                     editable={isEditing}
                                 />
@@ -129,7 +129,7 @@ const More: React.FC = () => {
                                 <Text style={styles.label}>Email Address</Text>
                                 <TextInput
                                     style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={user.email}
+                                    value={session?.user?.user_metadata?.email}
                                     onChangeText={(text) => setUser({ ...user, email: text })}
                                     editable={isEditing}
                                     keyboardType="email-address"
@@ -140,7 +140,7 @@ const More: React.FC = () => {
                                 <Text style={styles.label}>Phone Number</Text>
                                 <TextInput
                                     style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={user.phone}
+                                    value={session?.user?.user_metadata?.phone || "+1 (555) 123-4567"}
                                     onChangeText={(text) => setUser({ ...user, phone: text })}
                                     editable={isEditing}
                                     keyboardType="phone-pad"
@@ -361,12 +361,9 @@ const More: React.FC = () => {
                 <Text style={styles.headerTitle}>Profile</Text>
             </View>
 
+            {/* Standard Tab Bar */}
             <View style={styles.tabContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.tabScrollView}
-                >
+                <View style={styles.tabBar}>
                     {tabs.map((tab) => (
                         <TouchableOpacity
                             key={tab.id}
@@ -378,9 +375,9 @@ const More: React.FC = () => {
                         >
                             <Ionicons
                                 name={tab.icon}
-                                size={20}
-                                color="black" />
-                            {/* <Text style={styles.tabIcon}>{tab.icon}</Text> */}
+                                size={18}
+                                color={activeTab === tab.id ? '#10B981' : '#6B7280'}
+                            />
                             <Text
                                 style={[
                                     styles.tabText,
@@ -391,7 +388,7 @@ const More: React.FC = () => {
                             </Text>
                         </TouchableOpacity>
                     ))}
-                </ScrollView>
+                </View>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -412,6 +409,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     headerTitle: {
         fontSize: 24,
@@ -421,35 +423,33 @@ const styles = StyleSheet.create({
     tabContainer: {
         // backgroundColor: '#FFFFFF',
         // borderBottomWidth: 1,
-        padding: 8,
         // borderBottomColor: '#E5E7EB',
     },
-    tabScrollView: {
+    tabBar: {
+        flexDirection: 'row',
         paddingHorizontal: 20,
     },
     tab: {
-        flexDirection: 'row',
+        flex: 1,
+        flexDirection: 'column',
         alignItems: 'center',
-        paddingHorizontal: 16,
         paddingVertical: 12,
-        marginRight: 8,
-        borderRadius: 20,
-        backgroundColor: '#F3F4F6',
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
     },
     activeTab: {
-        backgroundColor: '#10B981',
-    },
-    tabIcon: {
-        fontSize: 16,
-        marginRight: 8,
+        borderBottomColor: '#10B981',
     },
     tabText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '500',
         color: '#6B7280',
+        marginTop: 4,
+        textAlign: 'center',
     },
     activeTabText: {
-        color: '#FFFFFF',
+        color: '#10B981',
+        fontWeight: '600',
     },
     content: {
         flex: 1,
@@ -475,6 +475,7 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: 40,
         marginRight: 16,
+        backgroundColor: '#F3F4F6', // Fallback background color
     },
     profileInfo: {
         flex: 1,

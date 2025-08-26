@@ -1,4 +1,8 @@
+import TherapistDashboard from '@/components/TherapistDashboard';
+import { useCheckAuth } from '@/context/AuthContext';
+import { useCrud } from '@/hooks/useCrud';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -28,6 +32,25 @@ interface ChatScreenProps {
   };
 }
 
+interface Patient {
+  // Add relevant patient fields here
+  [key: string]: any;
+}
+
+interface UserResult {
+  user_id: string;
+  name: string;
+  therapist_id?: string;
+  therapist?: any;
+  patients?: Patient[];
+  [key: string]: any;
+}
+
+interface UserQueryData {
+  result?: UserResult[];
+  [key: string]: any;
+}
+
 const ChatScreen = ({ navigation }: ChatScreenProps) => {
   const [messages, setMessages] = useState([
     {
@@ -42,6 +65,7 @@ const ChatScreen = ({ navigation }: ChatScreenProps) => {
   const [showTherapistBio, setShowTherapistBio] = useState(false);
   const [isNewUser] = useState(true);
   const scrollViewRef = useRef<ScrollView>(null);
+
 
   const therapistInfo = {
     name: 'Dr. Sarah Johnson',
@@ -441,17 +465,43 @@ const Chat = () => {
     goBack: () => setCurrentScreen('chat'),
   };
 
+  const { session } = useCheckAuth()
+  const senderId = session?.user?.id
+  const { getUserById } = useCrud()
+  // const router = useRouter()
+
+
+
+
+  const { data: user, isLoading, error } = useQuery<UserQueryData>({
+    queryKey: ["user", senderId],
+
+    queryFn: ({ queryKey }) => {
+      const [_key, id] = queryKey
+      return getUserById("user", { user_id: id }, undefined, "user_id, name, therapist_id, therapist(name, therapist_id, authority, license, specialization, summary), patients(*)")
+    },
+    enabled: !!senderId // only fetch if senderId exists
+  });
+
+  const therapist = user?.result?.[0]?.therapist
+
+
+  if (!therapist) {
+    return <TherapistDashboard />;
+  }
+
   if (currentScreen === 'call') {
     return <CallScreen route={{ params: routeParams }} navigation={navigation} />;
   }
 
-  return <ChatScreen navigation={navigation} />;
+  return <ChatScreen navigation={navigation} />
+
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f9fa',
   },
 
   // Header Styles
@@ -463,6 +513,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   therapistInfo: {
     flex: 1,
@@ -542,7 +597,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 4,
   },
   therapistBubble: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#fff',
     borderBottomLeftRadius: 4,
   },
   messageText: {

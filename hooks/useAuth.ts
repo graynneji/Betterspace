@@ -1,9 +1,12 @@
 // src/hooks/useAuth.ts
 import { AuthAdapter } from "@/adapter/authAdapter";
+import { Client } from "@/utils/client";
 import { useState } from "react";
 import { AuthService } from "../services/authService";
 
-const authService = new AuthService(new AuthAdapter());
+const client = new Client();
+const adapter = new AuthAdapter(client);
+const authService = new AuthService(adapter);
 
 export const useAuth = () => {
   const [loading, setLoading] = useState<boolean>(false);

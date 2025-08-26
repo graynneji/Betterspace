@@ -75,20 +75,7 @@ import React from 'react';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  // const router = useRouter();
-  // const authService = new AuthService(new AuthAdapter());
-  // const { isPending, error, data } = useQuery({
-  //   queryKey: ["auth"],
-  //   queryFn: async () => {
-  //     return await authService.checkUser()
-  //   }
-  // });
-  // if (error && !data?.user) {
-  //   router.push('/auth/signin');
-  // }
-  // if (isPending) {
-  //   return null
-  // }
+
 
   return (
 
@@ -155,12 +142,12 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="therapist-dashboard"
         options={{
           href: null,
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="more"
         options={{

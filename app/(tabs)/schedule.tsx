@@ -49,7 +49,8 @@ const EVENT_CATEGORIES = [
 
 const Schedule: React.FC = () => {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [selectedDate, setSelectedDate] = useState<string>('');
+    const today = new Date().toISOString().split('T')[0];
+    const [selectedDate, setSelectedDate] = useState<string>(today);
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
@@ -64,7 +65,6 @@ const Schedule: React.FC = () => {
     });
 
     // Get today's date as default
-    const today = new Date().toISOString().split('T')[0];
 
     // Generate marked dates for calendar
     const getMarkedDates = () => {
@@ -91,7 +91,8 @@ const Schedule: React.FC = () => {
 
     // Handle date selection
     const onDayPress = (day: DateData) => {
-        setSelectedDate(day.dateString);
+        // setSelectedDate(day.dateString);
+        setSelectedDate(day.dateString === selectedDate ? '' : day.dateString);
     };
 
     // Open modal for new event
@@ -217,6 +218,7 @@ const Schedule: React.FC = () => {
 
             <Calendar
                 style={styles.calendar}
+                initialDate={today}
                 onDayPress={onDayPress}
                 markingType="multi-dot"
                 markedDates={getMarkedDates()}
@@ -307,6 +309,7 @@ const Schedule: React.FC = () => {
                                 onChangeText={(text) => setEventForm(prev => ({ ...prev, title: text }))}
                                 placeholder="Enter event title"
                                 autoFocus
+                                placeholderTextColor="#9ca3af"
                             />
                         </View>
 
@@ -319,6 +322,7 @@ const Schedule: React.FC = () => {
                                 placeholder="Enter event description"
                                 multiline
                                 numberOfLines={3}
+                                placeholderTextColor="#9ca3af"
                             />
                         </View>
 
@@ -408,6 +412,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderBottomWidth: 1,
         borderBottomColor: '#e9ecef',
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
     },
     headerTitle: {
         fontSize: 24,
@@ -415,7 +424,7 @@ const styles = StyleSheet.create({
         color: '#2d4150',
     },
     addButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#4CAF50',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -481,7 +490,7 @@ const styles = StyleSheet.create({
     },
     eventTime: {
         fontSize: 14,
-        color: '#007AFF',
+        color: '#4CAF50',
         fontWeight: '500',
         marginBottom: 4,
     },
@@ -525,14 +534,14 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
     },
     cancelButtonText: {
-        color: '#007AFF',
+        color: '#4CAF50',
         fontSize: 16,
     },
     saveButton: {
         paddingVertical: 8,
     },
     saveButtonText: {
-        color: '#007AFF',
+        color: '#4CAF50',
         fontSize: 16,
         fontWeight: '600',
     },
@@ -585,7 +594,7 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     categoryButtonSelected: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#4CAF50',
     },
     categoryButtonText: {
         fontSize: 14,

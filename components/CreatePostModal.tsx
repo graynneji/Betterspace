@@ -323,6 +323,7 @@ const styles = StyleSheet.create({
     },
     cancelBtn: {
         padding: 4,
+        color: '#4CAF50'
     },
     cancelBtnText: {
         fontSize: 16,
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     submitBtn: {
-        backgroundColor: '#3b82f6',
+        backgroundColor: '#4CAF50',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,

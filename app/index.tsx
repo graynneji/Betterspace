@@ -30,7 +30,6 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
   useLayoutEffect(() => {
     if (loading) return
-    console.log(session)
     if (session?.user) {
       router.replace('/(tabs)/chat');
     } else {

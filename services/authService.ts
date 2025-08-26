@@ -1,4 +1,5 @@
 import { AuthAdapter } from "@/adapter/authAdapter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
 
 export class AuthService {
@@ -48,9 +49,18 @@ export class AuthService {
 
   async checkUser(): Promise<any> {
     const { data, error } = await this.authAdapter.getUser();
-    if (!data) {
+    if (error) {
       throw new Error("You are not authenticated");
     }
     return { data, error };
+  }
+
+  async refreshSession(): Promise<any> {
+    const { data, error } = await this.authAdapter.refreshOrClearSession();
+    if (error || !data.session) {
+      // session invalid or expired, remove local storage
+      await AsyncStorage.removeItem("supabase.auth.token");
+      throw new Error("Session expired, please log in again.");
+    }
   }
 }

@@ -1,8 +1,10 @@
-import { useAuth } from '@/hooks/useAuth';
+import { useCheckAuth } from '@/context/AuthContext';
 import { loginSchema } from '@/lib/validationSchema';
 import { Ionicons } from '@expo/vector-icons';
 import { User } from '@supabase/supabase-js';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useNavigation, useRouter } from "expo-router";
+import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { Alert, Keyboard, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -34,8 +36,88 @@ const SignIn = () => {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [rememberMe, setRememberMe] = useState(false);
-    const { login, loading } = useAuth()
-    const [error, setError] = useState('');
+    const { login, loading } = useCheckAuth()
+    const [biometricIcon, setBiometricIcon] = useState<keyof typeof Ionicons.glyphMap>('scan');
+    const [biometricText, setBiometricText] = useState('Continue with Biometrics');
+
+    useEffect(() => {
+        checkBiometricTypes();
+    }, []);
+
+    const checkBiometricTypes = async () => {
+        try {
+            const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+
+            if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                setBiometricIcon('scan');
+                setBiometricText('Continue with Face ID');
+            } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+                setBiometricIcon('finger-print');
+                setBiometricText('Continue with Fingerprint');
+            } else {
+                setBiometricIcon('scan');
+                setBiometricText('Continue with Biometrics');
+            }
+        } catch (error) {
+            console.error('Error checking biometric types:', error);
+        }
+    };
+
+    const handleBiometricAuth = async () => {
+        try {
+            // Check if biometric authentication is available
+            const isAvailable = await LocalAuthentication.hasHardwareAsync();
+            if (!isAvailable) {
+                Alert.alert('Error', 'Biometric authentication is not available on this device');
+                return;
+            }
+
+            // Check what types of biometrics are enrolled
+            const biometricTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+
+            // Check if biometrics are enrolled
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+            if (!isEnrolled) {
+                Alert.alert('Error', 'No biometric data is enrolled on this device');
+                return;
+            }
+
+            // Perform authentication
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Authenticate to continue',
+                fallbackLabel: 'Use PIN/Password',
+                disableDeviceFallback: false,
+            });
+
+            if (result.success) {
+                // Authentication successful
+                console.log('Biometric authentication successful');
+                // Proceed with login logic
+                const email = await SecureStore.getItemAsync('email');
+                const password = await SecureStore.getItemAsync('password');
+
+                if (!email || !password) {
+                    // Credentials were cleared => force user to log in manually
+                    Alert.alert('Please login manually');
+                    return;
+                }
+
+                const { data }: LoginData = await login(email, password);
+
+                router.push("chat");
+                // if (data && data?.user?.user_metadata?.designation === "therapist") {
+
+                // }
+            } else {
+                // Authentication failed or cancelled
+                console.log('Biometric authentication failed');
+            }
+
+        } catch (error) {
+            console.error('Biometric authentication error:', error);
+            Alert.alert('Error', 'An error occurred during biometric authentication');
+        }
+    };
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
@@ -208,18 +290,27 @@ const SignIn = () => {
                             <View style={styles.dividerLine} />
                         </View>
 
-                        <TouchableOpacity style={styles.googleSignInButton}>
+                        {/* <TouchableOpacity style={styles.googleSignInButton}>
                             <View style={styles.googleButtonContent}>
                                 <Ionicons name="logo-google" size={20} color="#4285f4" style={styles.googleIcon} />
                                 <Text style={styles.googleSignInButtonText}>
                                     Continue with Google
                                 </Text>
                             </View>
+                        </TouchableOpacity> */}
+
+                        <TouchableOpacity style={styles.biometricButton} onPress={handleBiometricAuth}>
+                            <View style={styles.buttonContent}>
+                                <Ionicons name={biometricIcon} size={20} color="#6366f1" style={styles.icon} />
+                                <Text style={styles.buttonText}>
+                                    {biometricText}
+                                </Text>
+                            </View>
                         </TouchableOpacity>
 
                         <View style={styles.createAccountContainer}>
                             <Text style={styles.createAccountText}>
-                                Don&apos;t have an account?{' '}
+                                <Text>Don&apos;t have an account?{' '}</Text>
                                 <TouchableOpacity onPress={() => {/* Navigate to CreateAccount */ }}>
                                     <Text style={styles.createAccountLink}>Create Account</Text>
                                 </TouchableOpacity>
@@ -390,26 +481,48 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginHorizontal: 16,
     },
-    googleSignInButton: {
-        borderWidth: 2,
-        borderColor: '#e5e7eb', // gray-200
-        borderRadius: 25,
-        paddingVertical: 16,
-        alignItems: 'center',
-        backgroundColor: '#ffffff',
+    // googleSignInButton: {
+    //     borderWidth: 2,
+    //     borderColor: '#e5e7eb', // gray-200
+    //     borderRadius: 25,
+    //     paddingVertical: 16,
+    //     alignItems: 'center',
+    //     backgroundColor: '#ffffff',
+    //     marginBottom: 32,
+    // },
+    // googleButtonContent: {
+    //     flexDirection: 'row',
+    //     alignItems: 'center',
+    // },
+    // googleIcon: {
+    //     marginRight: 12,
+    // },
+    // googleSignInButtonText: {
+    //     color: '#374151', // gray-700
+    //     fontSize: 16,
+    //     fontWeight: '600',
+    // },
+    biometricButton: {
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 8,
+        paddingVertical: 12,
+        marginVertical: 8,
         marginBottom: 32,
     },
-    googleButtonContent: {
+    buttonContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    googleIcon: {
-        marginRight: 12,
+    icon: {
+        marginRight: 8,
     },
-    googleSignInButtonText: {
-        color: '#374151', // gray-700
+    buttonText: {
+        color: '#1f2937',
         fontSize: 16,
-        fontWeight: '600',
+        fontWeight: '500',
     },
     createAccountContainer: {
         alignItems: 'center',
@@ -417,6 +530,9 @@ const styles = StyleSheet.create({
     createAccountText: {
         color: '#4b5563', // gray-600
         fontSize: 16,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     createAccountLink: {
         color: '#047857', // emerald-700

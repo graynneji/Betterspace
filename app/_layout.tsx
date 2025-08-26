@@ -13,6 +13,23 @@ import Toast from 'react-native-toast-message';
 const queryClient = new QueryClient();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  // const { session, loading } = useCheckAuth();
+  // const router = useRouter();
+
+  // useLayoutEffect(() => {
+  //   if (loading) return;
+  //   if (session) {
+  //     router.replace("/(tabs)/chat");
+  //   } else {
+  //     router.replace("/auth/signin");
+  //   }
+  // }, [session, loading]);
+
+  // if (loading) {
+  //   return (
+  //     <SkeletonLoader />
+  //   );
+  // }
 
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
