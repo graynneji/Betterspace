@@ -11,26 +11,21 @@ export class CrudService {
 
   async getUserById(
     table: string,
-    filters: Record<string, any> = {},
-    options?: { orderBy?: string; ascending?: boolean },
-    column: string = "*"
+    filters: Record<any, any> = {},
+    column: string
   ) {
-    const { result, error } = await this.crudAdapter.read(
-      table,
-      filters,
-      options,
-      column
-    );
-
-    if (error) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to get user",
-        text2: error.message,
-      });
-      throw new Error(error.message);
+    try {
+      const { data, error } = await this.crudAdapter.readById(
+        table,
+        filters,
+        column
+      );
+      if (error) throw new Error(error.message);
+      return { result: data ?? [] };
+    } catch (err: string | unknown) {
+      console.error(err);
+      return { result: [] };
     }
-    return { result, error };
   }
   async updateUser(id: string, values: { name?: string }) {
     return this.crudAdapter.update("users", id, values);

@@ -20,22 +20,10 @@ export function useCrud() {
 
   async function getUserById(
     table: string,
-    filters: Record<string, any> = {},
-    options?: { orderBy?: string; ascending?: boolean },
-    column: string = "*"
+    filters: Record<any, any> = {},
+    column: string
   ) {
-    const result = await crudService.getUserById(
-      table,
-      filters,
-      options,
-      column
-    );
-    // return useQuery({
-    //   queryKey: ["users", filters?.id],
-    //   queryFn: async () =>
-    //   enabled: !!filters?.id, // only runs if Id exists
-    // });
-    return result;
+    return await crudService.getUserById(table, filters, column);
   }
 
   // function updateUser() {

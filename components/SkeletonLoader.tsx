@@ -55,7 +55,7 @@ const SkeletonLoader: React.FC = () => {
                 {/* Header Skeleton */}
                 <View style={styles.headerSkeleton}>
                     <View style={styles.skeletonItem}>
-                        <View style={styles.skeletonAvatar} />
+                        {/* <View style={styles.skeletonAvatar} /> */}
                         <Animated.View
                             style={[
                                 styles.shimmer,
@@ -292,14 +292,14 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginBottom: 12,
     },
-    skeletonAvatar: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#f0f0f0',
-        alignSelf: 'center',
-        marginBottom: 16,
-    },
+    // skeletonAvatar: {
+    //     width: 60,
+    //     height: 60,
+    //     borderRadius: 30,
+    //     backgroundColor: '#f0f0f0',
+    //     alignSelf: 'center',
+    //     marginBottom: 16,
+    // },
     skeletonTitle: {
         alignItems: 'center',
     },

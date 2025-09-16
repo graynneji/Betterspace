@@ -1,3 +1,4 @@
+// import TherapistDashboard from '@/components/TherapistDash-v2';
 import TherapistDashboard from '@/components/TherapistDashboard';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrud } from '@/hooks/useCrud';
@@ -37,7 +38,7 @@ interface Patient {
   [key: string]: any;
 }
 
-interface UserResult {
+export interface UserResult {
   user_id: string;
   name: string;
   therapist_id?: string;
@@ -46,8 +47,8 @@ interface UserResult {
   [key: string]: any;
 }
 
-interface UserQueryData {
-  result?: UserResult[];
+export interface UserQueryData {
+  data?: UserResult[];
   [key: string]: any;
 }
 
@@ -452,6 +453,14 @@ const CallScreen = ({ route, navigation }: CallScreenProps) => {
   );
 };
 
+interface Session {
+  user: {
+    id: string;
+    [key: string]: any;
+  } | null;
+  [key: string]: any;
+}
+
 // Navigation Component (for demo purposes)
 const Chat = () => {
   const [currentScreen, setCurrentScreen] = useState('chat');
@@ -466,28 +475,25 @@ const Chat = () => {
   };
 
   const { session } = useCheckAuth()
-  const senderId = session?.user?.id
+  const senderId = session?.user?.id!
   const { getUserById } = useCrud()
   // const router = useRouter()
 
-
-
-
-  const { data: user, isLoading, error } = useQuery<UserQueryData>({
-    queryKey: ["user", senderId],
-
+  const { data, isLoading, error } = useQuery<UserQueryData>({
+    queryKey: [senderId],
     queryFn: ({ queryKey }) => {
-      const [_key, id] = queryKey
-      return getUserById("user", { user_id: id }, undefined, "user_id, name, therapist_id, therapist(name, therapist_id, authority, license, specialization, summary), patients(*)")
+      const [sendersId] = queryKey
+      return getUserById("user", { user_id: sendersId }, "user_id, name, therapist_id, therapist(name, therapist_id, authority, license, specialization, summary), patients(*)")
     },
     enabled: !!senderId // only fetch if senderId exists
   });
-
-  const therapist = user?.result?.[0]?.therapist
+  const user = data?.[0]
+  const therapist = data?.result[0]?.therapist
 
 
   if (!therapist) {
-    return <TherapistDashboard />;
+    return <TherapistDashboard senderId={senderId} />;
+    // return <TherapistDashboard senderId={senderId} />;
   }
 
   if (currentScreen === 'call') {
