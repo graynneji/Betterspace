@@ -1,6 +1,7 @@
+import Avatar from '@/components/Avatar';
 import CategoryList from '@/components/CategoryList';
 import CreatePostModal from '@/components/CreatePostModal';
-import DiscussionView from '@/components/DiscussionView';
+import DiscussionView, { Comment, LikesProps } from '@/components/DiscussionView';
 import ErrorMessage from '@/components/ErrorMessage';
 import { useGetAll } from '@/hooks/useCrud';
 import { formatThreadTime } from '@/utils';
@@ -24,14 +25,14 @@ interface Author {
     avatar?: string;
 }
 
-interface Comment {
-    id: string;
-    content: string;
-    author: Author;
-    timestamp: string;
-    likes: number;
-    isLiked: boolean;
-}
+// interface Comment {
+//     id: string;
+//     content: string;
+//     author: Author;
+//     timestamp: string;
+//     likes: number;
+//     isLiked: boolean;
+// }
 
 interface Discussion {
     id: string;
@@ -45,7 +46,8 @@ interface Discussion {
     views: number;
     is_urgent?: boolean;
     is_annoymous?: boolean;
-    // comments?: Comment[];
+    article_comments?: Comment[];
+    article_likes?: LikesProps[];
 }
 
 interface Category {
@@ -105,7 +107,8 @@ const Community: React.FC<CommunityProps> = () => {
         { id: 7, name: "Personal Growth", icon: "trending-up-outline", color: "#14b8a6" },
     ];
 
-    const { data, isLoading, error, refetch } = useGetAll('article', { orderBy: 'created_at', ascending: false });
+    const { data, isLoading, error, refetch } = useGetAll('article', { orderBy: 'created_at', ascending: false }, "*, article_comments!article_id(*), article_likes!discussion_id(*)");
+
     // if (error) {
     //     refetch();
     // }
@@ -161,11 +164,12 @@ const Community: React.FC<CommunityProps> = () => {
         >
             <View style={styles.discussionHeader}>
                 <View style={styles.authorInfo}>
-                    <View style={styles.avatar}>
+                    <Avatar annoymous={item?.is_annoymous} author={item.author} />
+                    {/* <View style={styles.avatar}>
                         <Text style={styles.avatarText}>
                             {!item?.is_annoymous ? item.author.charAt(0).toUpperCase() : "A"}
                         </Text>
-                    </View>
+                    </View> */}
                     <View>
                         <Text style={styles.authorName}>{!item?.is_annoymous ? item.author : "Annoymous"}</Text>
                         <Text style={styles.timestamp}>{formatThreadTime(item.created_at)}</Text>
@@ -189,11 +193,11 @@ const Community: React.FC<CommunityProps> = () => {
                 <View style={styles.stats}>
                     <View style={styles.statItem}>
                         <Ionicons name="heart-outline" size={16} color="#6b7280" />
-                        {/* <Text style={styles.statText}>{item.likes}</Text> */}
+                        <Text style={styles.statText}>{item.article_likes?.length || 0}</Text>
                     </View>
                     <View style={styles.statItem}>
                         <Ionicons name="chatbubble-outline" size={16} color="#6b7280" />
-                        {/* <Text style={styles.statText}>{item.comments?.length || 0}</Text> */}
+                        <Text style={styles.statText}>{item.article_comments?.length || 0}</Text>
                     </View>
                     <View style={styles.statItem}>
                         <Ionicons name="eye-outline" size={16} color="#6b7280" />
@@ -503,20 +507,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#3b82f6',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    avatarText: {
-        color: 'white',
-        fontWeight: '600',
-        fontSize: 16,
-    },
+
     authorName: {
         fontSize: 14,
         fontWeight: '600',

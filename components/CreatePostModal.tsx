@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import {
     Alert,
     KeyboardAvoidingView,
+    Linking,
     Modal,
     Platform,
     ScrollView,
@@ -109,6 +110,52 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
             onClose();
         }
     };
+
+    const emergencyResource = () => {
+        Alert.alert(
+            'Crisis Resources',
+            'EMERGENCY SERVICES\n' +
+            '• Nigeria: 112 or 767\n' +
+            '• Police: 911\n' +
+            '• Ambulance: 199\n\n' +
+
+            'MENTAL HEALTH CRISIS LINES\n' +
+            '• Mental Health Nigeria: 0809 210 6493\n' +
+            '• Mentally Aware Nigeria: 0706 210 6493\n' +
+            '• She Writes Woman: 0812 333 3383\n\n' +
+
+            'INTERNATIONAL HOTLINES\n' +
+            '• Suicide Prevention (US): 988\n' +
+            '• Samaritans (UK): 116 123\n' +
+            '• Lifeline (AUS): 13 11 14\n\n' +
+
+            'TEXT SUPPORT\n' +
+            '• Crisis Text Line (US): Text HOME to 741741\n\n' +
+
+            'ONLINE RESOURCES\n' +
+            '• IASP: findahelpline.com\n' +
+            '• WHO: who.int/mental_health\n\n' +
+
+            'You are not alone. Help is available 24/7.',
+            [
+                {
+                    text: 'Call Emergency (112)',
+                    onPress: () => Linking.openURL('tel:112'),
+                    style: 'destructive', // Red color on iOS for urgent action
+                },
+                {
+                    text: 'Call Mental Health Line',
+                    onPress: () => Linking.openURL('tel:08092106493'),
+                    style: 'default',
+                },
+                {
+                    text: 'Close',
+                    style: 'cancel',
+                },
+            ],
+            { cancelable: true }
+        );
+    }
 
     const renderCategoryOption = (category: Category) => (
         <TouchableOpacity
@@ -296,7 +343,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         <Text style={styles.crisisText}>
                             If you're in crisis, please contact emergency services or a crisis hotline immediately.
                         </Text>
-                        <TouchableOpacity style={styles.crisisBtn}>
+                        <TouchableOpacity style={styles.crisisBtn} onPress={emergencyResource}>
                             <Text style={styles.crisisBtnText}>View Crisis Resources</Text>
                         </TouchableOpacity>
                     </View>

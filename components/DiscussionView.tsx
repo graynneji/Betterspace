@@ -1,8 +1,7 @@
+import { useCheckAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    Image,
-    Keyboard,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -10,8 +9,9 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
+import Avatar from './Avatar';
 
 interface Author {
     id: string;
@@ -19,13 +19,20 @@ interface Author {
     avatar?: string;
 }
 
-interface Comment {
+export interface LikesProps {
+    created_at?: string;
+    user_id: string;
+    discussion_id?: string;
+    id: string;
+}
+export interface Comment {
     id: string;
     content: string;
-    author: Author;
-    timestamp: string;
-    likes: number;
-    isLiked: boolean;
+    author: string;
+    created_at: string;
+    // likes: number;
+    // isLiked: boolean;
+    article_likes: LikesProps[];
 }
 
 interface Discussion {
@@ -40,7 +47,8 @@ interface Discussion {
     is_annoymous?: boolean
     views: number;
     is_urgent?: boolean;
-    comments?: Comment[];
+    article_comments?: Comment[];
+    article_likes?: LikesProps[];
 }
 
 interface Category {
@@ -73,10 +81,13 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     views,
     handleLikes,
 }) => {
-    const [comments, setComments] = useState<Comment[]>(discussion.comments || []);
+    console.log(discussion, "discussion in view")
+    const [comments, setComments] = useState<Comment[]>(discussion.article_comments || []);
     const [newComment, setNewComment] = useState<string>('');
     // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
     // const [likes, setLikes] = useState<number>(discussion.likes || 0);
+    const { session } = useCheckAuth()
+    const userId = session?.user?.id!
 
     const formatTime = (timestamp: string): string => {
         const now = new Date();
@@ -99,63 +110,64 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     //     handleLikes(discussion.author.id, discussion.id);
     // };
 
-    const handleAddComment = (): void => {
-        Keyboard.dismiss()
-        if (newComment.trim()) {
-            const comment: Comment = {
-                id: Date.now().toString(),
-                content: newComment,
-                author: {
-                    id: 'current-user',
-                    name: 'Current User', // Replace with actual user
-                    avatar: 'https://via.placeholder.com/32',
-                },
-                timestamp: new Date().toISOString(),
-                likes: 0,
-                isLiked: false,
-            };
+    // const handleAddComment = (): void => {
+    //     Keyboard.dismiss()
+    //     if (newComment.trim()) {
+    //         const comment: Comment = {
+    //             id: Date.now().toString(),
+    //             content: newComment,
+    //             author: {
+    //                 id: 'current-user',
+    //                 name: 'Current User', // Replace with actual user
+    //                 avatar: 'https://via.placeholder.com/32',
+    //             },
+    //             timestamp: new Date().toISOString(),
+    //             likes: 0,
+    //             isLiked: false,
+    //         };
 
-            setComments([...comments, comment]);
-            setCommentCount(comments.length + 1);
-            setNewComment('');
-        }
-    };
+    //         setComments([...comments, comment]);
+    //         setCommentCount(comments.length + 1);
+    //         setNewComment('');
+    //     }
+    // };
 
-    const handleCommentLike = (commentId: string): void => {
-        setComments(comments.map(comment =>
-            comment.id === commentId
-                ? {
-                    ...comment,
-                    isLiked: !comment.isLiked,
-                    likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1
-                }
-                : comment
-        ));
-    };
+    // const handleCommentLike = (commentId: string): void => {
+    //     setComments(comments.map(comment =>
+    //         comment.id === commentId
+    //             ? {
+    //                 ...comment,
+    //                 isLiked: !comment.isLiked,
+    //                 likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1
+    //             }
+    //             : comment
+    //     ));
+    // };
 
     const renderComment = (comment: Comment) => (
         <View key={comment.id} style={styles.commentCard}>
             <View style={styles.commentHeader}>
-                <Image
+                {/* <Image
                     source={{ uri: comment.author.avatar }}
                     style={styles.commentAvatar}
-                />
+                /> */}
+                <Avatar annoymous={false} author={comment.author} />
                 <View style={styles.commentAuthorInfo}>
-                    <Text style={styles.commentAuthorName}>{comment.author.name}</Text>
-                    <Text style={styles.commentTime}>{formatTime(comment.timestamp)}</Text>
+                    <Text style={styles.commentAuthorName}>{comment.author}</Text>
+                    <Text style={styles.commentTime}>{formatTime(comment.created_at)}</Text>
                 </View>
 
-                <TouchableOpacity
+                {/* <TouchableOpacity
                     style={styles.commentLikeBtn}
-                    onPress={() => handleCommentLike(comment.id)}
+                // onPress={() => handleCommentLike(comment.id)}
                 >
                     <Ionicons
-                        name={comment.isLiked ? "heart" : "heart-outline"}
+                        name={comment.article_likes.length > 0 ? "heart" : "heart-outline"}
                         size={16}
-                        color={comment.isLiked ? "#ef4444" : "#6b7280"}
+                        color={comment.article_likes.length > 0 ? "#ef4444" : "#6b7280"}
                     />
-                    <Text style={styles.commentLikes}>{comment.likes}</Text>
-                </TouchableOpacity>
+                    <Text style={styles.commentLikes}>{comment.article_likes.length}</Text>
+                </TouchableOpacity> */}
             </View>
 
             <Text style={styles.commentContent}>{comment.content}</Text>
@@ -193,11 +205,12 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                                 source={{ uri: discussion.author?.avatar || 'https://via.placeholder.com/40' }}
                                 style={styles.authorAvatar}
                             /> */}
-                            <View style={styles.avatar}>
+                            <Avatar annoymous={discussion?.is_annoymous} author={discussion.author} />
+                            {/* <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>
                                     {!discussion?.is_annoymous ? discussion.author.charAt(0).toUpperCase() : "A"}
                                 </Text>
-                            </View>
+                            </View> */}
                             <View style={styles.authorDetails}>
                                 <Text style={styles.authorName}>{discussion.author}</Text>
                                 <Text style={styles.postTime}>{formatTime(discussion.created_at)}</Text>
@@ -234,17 +247,17 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                             style={styles.statButton}
                         // onPress={handleLikePress}
                         >
-                            {/* <Ionicons
-                                name={isLiked ? "heart" : "heart-outline"}
+                            <Ionicons
+                                name={discussion?.article_likes?.some(like => like.user_id === userId) ? "heart" : "heart-outline"}
                                 size={20}
-                                color={isLiked ? "#ef4444" : "#6b7280"}
+                                color={discussion?.article_likes?.some(like => like.user_id === userId) ? "#ef4444" : "#6b7280"}
                             />
                             <Text style={[
                                 styles.statText,
-                                isLiked && styles.statTextLiked
+                                false && styles.statTextLiked
                             ]}>
-                                {likes}
-                            </Text> */}
+                                {discussion?.article_likes?.length || 0}
+                            </Text>
                         </TouchableOpacity>
 
                         <View style={styles.statButton}>
@@ -273,7 +286,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         </View>
                     ) : (
                         <View style={styles.commentsList}>
-                            {comments.map(renderComment)}
+                            {discussion.article_comments?.map(renderComment)}
                         </View>
                     )}
                 </View>
@@ -295,7 +308,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         styles.sendBtn,
                         !newComment.trim() && styles.sendBtnDisabled
                     ]}
-                    onPress={handleAddComment}
+                    // onPress={handleAddComment}
                     disabled={!newComment.trim()}
                 >
                     <Ionicons
