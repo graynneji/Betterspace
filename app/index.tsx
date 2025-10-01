@@ -1,18 +1,19 @@
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { useCheckAuth } from '@/context/AuthContext';
 import { NavigationProp } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { SplashScreen, useRouter } from 'expo-router';
 import React, { useLayoutEffect } from 'react';
 import {
   ImageBackground,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
+SplashScreen.preventAutoHideAsync();
 const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const router = useRouter()
   const handleGetStarted = () => {
@@ -27,15 +28,21 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
     // navigation.navigate('SignIn');
   };
   const { session, loading } = useCheckAuth()
+  console.log("check Auth", session)
 
   useLayoutEffect(() => {
-    if (loading) return
+    if (loading) return;
+    // SplashScreen.hideAsync();
+
     if (session?.user) {
-      router.replace('/(tabs)/chat');
-    } else {
-      router.replace('/auth/signin');
+      console.log(session.user.user_metadata?.designation, " ✅ Only navigate if user exists")
+      if (session.user.user_metadata?.designation === "therapist") {
+        router.replace('/(tabs)/therapist-dashboard');
+      } else {
+        router.replace('/(tabs)/session');
+      }
     }
-  }, [session, loading]);
+  }, [loading, session]);
 
   if (loading) {
     return (
@@ -45,7 +52,7 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       {/* Background Image */}
       <ImageBackground

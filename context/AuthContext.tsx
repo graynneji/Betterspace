@@ -43,6 +43,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // get initial session
+    //  const init = async() =>{
+    //     try{
+    // callRefresh()
+    //   authService.checkUser().then(({ data }: DataUser) => {
+    //     setSession(data?.session ?? null);
+    //   });
+    // }catch(err){
+    //   setSession(null)
+    // }finally{
+    //       setLoading(false);
+
+    //     }
+    //   }
+    // init()
     callRefresh()
     authService.checkUser().then(({ data }: DataUser) => {
       setSession(data?.session ?? null);

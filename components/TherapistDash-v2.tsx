@@ -1,19 +1,16 @@
-import { UserQueryData } from '@/app/(tabs)/chat';
-import { useCrud } from '@/hooks/useCrud';
-import { useQuery } from '@tanstack/react-query';
+import { useGetById } from '@/hooks/useCrud';
 import React, { useState } from 'react';
 import {
     Alert,
-    Modal,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
+import SkeletonLoader from './SkeletonLoader';
 interface Patient {
     id: string;
     name: string;
@@ -96,28 +93,28 @@ const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ senderId }) => 
 
 
 
-    const { getUserById } = useCrud()
+    const { data: therapistData, isLoading: isLoad, error: therapistError } = useGetById("therapist", { therapist_id: senderId }, "id, balance, pending, total_earning", !!senderId)
 
-    const { data: therapistData, error: therapistError } = useQuery<UserQueryData>({
-        queryKey: ["therapist", { therapist_id: senderId }, "id, balance, pending, total_earning"],
-        queryFn: async ({ queryKey }) => {
-            const [table, filter, column] = queryKey
-            return await getUserById(table as string, filter as Record<any, any>, column as string);
-        },
-        enabled: !!senderId
-    });
+    // const { data: therapistData, isLoading: isLoad, error: therapistError } = useQuery<UserQueryData>({
+    //     queryKey: ["therapist", { therapist_id: senderId }, "id, balance, pending, total_earning"],
+    //     queryFn: async ({ queryKey }) => {
+    //         const [table, filter, column] = queryKey
+    //         return await getUserById(table as string, filter as Record<any, any>, column as string);
+    //     },
+    //     enabled: !!senderId
+    // });
 
     const therapistId = 6
     // const therapistId = therapistData?.result[0]?.id;
-
-    const { data, isLoading, error } = useQuery<PatientUserData>({
-        queryKey: ["patients", { therapist: therapistId }, "id, name, therapist, patient_id, appointment, is_subscribed, subscription"],
-        queryFn: async ({ queryKey }) => {
-            const [table, filter, column] = queryKey
-            return await getUserById(table as string, filter as Record<any, any>, column as string)
-        },
-        enabled: !!therapistId
-    });
+    const { data, isLoading, error, isError } = useGetById("patients", { therapist: therapistId }, "id, name, therapist, patient_id, appointment, is_subscribed, subscription", !!therapistId)
+    // const { data, isLoading, error, isError } = useQuery<PatientUserData>({
+    //     queryKey: ["patients", { therapist: therapistId }, "id, name, therapist, patient_id, appointment, is_subscribed, subscription"],
+    //     queryFn: async ({ queryKey }) => {
+    //         const [table, filter, column] = queryKey
+    //         return await getUserById(table as string, filter as Record<any, any>, column as string)
+    //     },
+    //     enabled: !!therapistId
+    // });
 
     // Note form state
     const [noteForm, setNoteForm] = useState({
@@ -213,6 +210,10 @@ const TherapistDashboard: React.FC<TherapistDashboardProps> = ({ senderId }) => 
             ]
         );
     };
+
+    if (isLoad || isLoading) {
+        <SkeletonLoader />
+    }
 
     // Patient List View
     if (!selectedPatient) {

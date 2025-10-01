@@ -32,18 +32,19 @@ interface Discussion {
     id: string;
     title: string;
     content: string;
-    author: Author;
-    category: string;
-    timestamp: string;
-    likes: number;
-    isLiked: boolean;
+    author: string;
+    category_id: number;
+    created_at: string;
+    // likes: number;
+    // isLiked: boolean;
+    is_annoymous?: boolean
     views: number;
-    isUrgent?: boolean;
+    is_urgent?: boolean;
     comments?: Comment[];
 }
 
 interface Category {
-    id: string;
+    id: number;
     name: string;
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
@@ -53,8 +54,8 @@ interface DiscussionViewProps {
     discussion: Discussion;
     setShowDiscussionView: (show: boolean) => void;
     categories: Category[];
-    getCategoryIcon: (categoryId: string) => keyof typeof Ionicons.glyphMap;
-    getCategoryColor: (categoryId: string) => string;
+    getCategoryIcon: (categoryId: number) => keyof typeof Ionicons.glyphMap;
+    getCategoryColor: (categoryId: number) => string;
     setCommentCount: (count: number) => void;
     commentCount: number;
     views: number;
@@ -74,8 +75,8 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
 }) => {
     const [comments, setComments] = useState<Comment[]>(discussion.comments || []);
     const [newComment, setNewComment] = useState<string>('');
-    const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
-    const [likes, setLikes] = useState<number>(discussion.likes || 0);
+    // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
+    // const [likes, setLikes] = useState<number>(discussion.likes || 0);
 
     const formatTime = (timestamp: string): string => {
         const now = new Date();
@@ -92,11 +93,11 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
         return `${diffInWeeks}w ago`;
     };
 
-    const handleLikePress = (): void => {
-        setIsLiked(!isLiked);
-        setLikes(isLiked ? likes - 1 : likes + 1);
-        handleLikes(discussion.author.id, discussion.id);
-    };
+    // const handleLikePress = (): void => {
+    //     setIsLiked(!isLiked);
+    //     setLikes(isLiked ? likes - 1 : likes + 1);
+    //     handleLikes(discussion.author.id, discussion.id);
+    // };
 
     const handleAddComment = (): void => {
         Keyboard.dismiss()
@@ -188,30 +189,35 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                     {/* Author Info */}
                     <View style={styles.discussionHeader}>
                         <View style={styles.authorInfo}>
-                            <Image
+                            {/* <Image
                                 source={{ uri: discussion.author?.avatar || 'https://via.placeholder.com/40' }}
                                 style={styles.authorAvatar}
-                            />
+                            /> */}
+                            <View style={styles.avatar}>
+                                <Text style={styles.avatarText}>
+                                    {!discussion?.is_annoymous ? discussion.author.charAt(0).toUpperCase() : "A"}
+                                </Text>
+                            </View>
                             <View style={styles.authorDetails}>
-                                <Text style={styles.authorName}>{discussion.author?.name}</Text>
-                                <Text style={styles.postTime}>{formatTime(discussion.timestamp)}</Text>
+                                <Text style={styles.authorName}>{discussion.author}</Text>
+                                <Text style={styles.postTime}>{formatTime(discussion.created_at)}</Text>
                             </View>
                         </View>
 
                         <View style={[
                             styles.categoryBadge,
-                            { backgroundColor: `${getCategoryColor(discussion.category)}20` }
+                            { backgroundColor: `${getCategoryColor(discussion.category_id)}20` }
                         ]}>
                             <Ionicons
-                                name={getCategoryIcon(discussion.category)}
+                                name={getCategoryIcon(discussion.category_id)}
                                 size={14}
-                                color={getCategoryColor(discussion.category)}
+                                color={getCategoryColor(discussion.category_id)}
                             />
                             <Text style={[
                                 styles.categoryText,
-                                { color: getCategoryColor(discussion.category) }
+                                { color: getCategoryColor(discussion.category_id) }
                             ]}>
-                                {discussion.category}
+                                {discussion.category_id}
                             </Text>
                         </View>
                     </View>
@@ -226,9 +232,9 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                     <View style={styles.discussionStats}>
                         <TouchableOpacity
                             style={styles.statButton}
-                            onPress={handleLikePress}
+                        // onPress={handleLikePress}
                         >
-                            <Ionicons
+                            {/* <Ionicons
                                 name={isLiked ? "heart" : "heart-outline"}
                                 size={20}
                                 color={isLiked ? "#ef4444" : "#6b7280"}
@@ -238,7 +244,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                                 isLiked && styles.statTextLiked
                             ]}>
                                 {likes}
-                            </Text>
+                            </Text> */}
                         </TouchableOpacity>
 
                         <View style={styles.statButton}>
@@ -248,7 +254,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
 
                         <View style={styles.statButton}>
                             <Ionicons name="eye-outline" size={20} color="#6b7280" />
-                            <Text style={styles.statText}>{views}</Text>
+                            <Text style={styles.statText}>{discussion?.views}</Text>
                         </View>
                     </View>
                 </View>
@@ -309,19 +315,21 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9fafb',
     },
     header: {
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        paddingVertical: 5,
+        // paddingVertical: 12,
+        // borderBottomWidth: 1,
+        // borderBottomColor: '#e5e7eb',
+        // elevation: 2,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 3,
+        marginBottom: 5,
     },
     backBtn: {
         padding: 4,
@@ -343,11 +351,13 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 20,
         marginTop: 16,
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        // elevation: 1,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 3,
+        borderColor: "#DEE2E6",
+        borderWidth: 1,
     },
     discussionHeader: {
         flexDirection: 'row',
@@ -359,6 +369,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flex: 1,
+    },
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#3b82f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    avatarText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
     },
     authorAvatar: {
         width: 40,
@@ -428,16 +452,18 @@ const styles = StyleSheet.create({
         color: '#ef4444',
     },
     commentsSection: {
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
         borderRadius: 12,
         padding: 16,
         marginTop: 16,
         marginBottom: 16,
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        // elevation: 1,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 3,
+        // borderColor: "#DEE2E6",
+        // borderWidth: 1,
     },
     commentsTitle: {
         fontSize: 18,
@@ -506,7 +532,7 @@ const styles = StyleSheet.create({
         lineHeight: 20,
     },
     commentInputContainer: {
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
         flexDirection: 'row',
         alignItems: 'flex-end',
         paddingHorizontal: 16,
@@ -523,6 +549,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         maxHeight: 100,
         fontSize: 14,
+        backgroundColor: '#fff',
         color: '#374151',
     },
     sendBtn: {

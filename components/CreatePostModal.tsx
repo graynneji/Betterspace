@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 interface Category {
-    id: string;
+    id: number;
     name: string;
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
@@ -29,7 +29,7 @@ interface CreatePostModalProps {
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, categories }) => {
     const [title, setTitle] = useState<string>('');
     const [content, setContent] = useState<string>('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('');
+    const [selectedCategory, setSelectedCategory] = useState<number>();
     const [isUrgent, setIsUrgent] = useState<boolean>(false);
     const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -62,7 +62,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
             // Reset form
             setTitle('');
             setContent('');
-            setSelectedCategory('');
+            setSelectedCategory(undefined);
             setIsUrgent(false);
             setIsAnonymous(false);
 
@@ -97,7 +97,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         onPress: () => {
                             setTitle('');
                             setContent('');
-                            setSelectedCategory('');
+                            setSelectedCategory(undefined);
                             setIsUrgent(false);
                             setIsAnonymous(false);
                             onClose();
@@ -232,7 +232,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                             style={styles.categoriesScroll}
                             contentContainerStyle={styles.categoriesContainer}
                         >
-                            {categories.filter(cat => cat.id !== 'all').map(renderCategoryOption)}
+                            {categories.filter(cat => cat.id !== 0).map(renderCategoryOption)}
                         </ScrollView>
                     </View>
 

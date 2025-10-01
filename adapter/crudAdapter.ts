@@ -1,29 +1,25 @@
 import { Client } from "@/utils/client";
 
+export interface ReadOptions {
+  or?: string;
+  order?: { column: string; ascending: boolean };
+  range?: { from: number; to: number };
+  count?: "exact" | "planned" | "estimated";
+  lt?: { column: string; value: any };
+}
 export class CrudAdapter {
   constructor(private client: Client) {}
 
-  async create<T>(table: string, payload: Partial<T>) {
-    const { data, error } = await this.client.supabase
-      .from(table)
-      .insert(payload)
-      .select();
-    if (error) throw error;
-    return data;
+  create<T>(table: string, payload: Partial<T>) {
+    return this.client.supabase.from(table).insert(payload);
   }
 
-  async read<T>(
+  read(
     table: string,
-    filters: Record<string, any> = {},
     options?: { orderBy?: string; ascending?: boolean },
     column: string = "*"
   ) {
     let query = this.client.supabase.from(table).select(column);
-
-    // Apply filters dynamically
-    for (const key in filters) {
-      query = query.eq(key, filters[key]);
-    }
 
     // Apply ordering if specified
     if (options?.orderBy) {
@@ -32,26 +28,37 @@ export class CrudAdapter {
       });
     }
 
-    const { data, error } = await query;
+    // const { data, error } = await query;
 
-    const result = data as T[];
-    return { result, error };
+    // const result = data as T[];
+    return query;
   }
 
-  async readById(
+  async readById<T>(
     table: string,
-    filters: Record<any, any> = {},
-    column: string = "*"
+    filters: Partial<T> = {},
+    column: string = "*",
+    options: ReadOptions = {}
   ) {
-    let query = this.client.supabase.from(table).select(column);
+    let query = this.client.supabase
+      .from(table)
+      .select(column, { count: "exact" });
 
     for (const key in filters) {
-      query = query.eq(key, filters[key]);
+      query = query.eq(key, filters[key] as any);
     }
+    if (options.or) query = query.or(options.or);
+    if (options.order)
+      query = query.order(options.order.column, {
+        ascending: options.order.ascending,
+      });
+    if (options.range)
+      query = query.range(options.range.from, options.range.to);
+    if (options.lt) query = query.lt(options.lt.column, options.lt.value);
     return await query;
   }
 
-  async update<T>(table: string, id: string | number, payload: Partial<T>) {
+  update<T>(table: string, id: string | number, payload: Partial<T>) {
     return this.client.supabase
       .from(table)
       .update(payload)
@@ -59,7 +66,11 @@ export class CrudAdapter {
       .select();
   }
 
-  async delete(table: string, id: string | number) {
+  delete(table: string, id: string | number) {
     return this.client.supabase.from(table).delete().eq("id", id);
+  }
+
+  rpc<T>(fn: string, params?: Partial<T>) {
+    return this.client.supabase.rpc(fn, params);
   }
 }

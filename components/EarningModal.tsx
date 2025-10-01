@@ -1,7 +1,8 @@
-import { UserQueryData } from "@/app/(tabs)/chat";
-import React, { useState, Dispatch, SetStateAction } from "react";
-import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
-import { TherapistData } from "./TherapistDashboard";
+import { TherapistData } from "@/types";
+import React, { Dispatch, SetStateAction, useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+// import { TherapistData } from "./TherapistDashboard";
 // Bank Details interface
 interface BankDetails {
     id?: string;
@@ -155,6 +156,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                 <View style={styles.tabContainer}>
                     <TouchableOpacity
                         style={[styles.tabButton, activeEarningsTab === 'overview' && styles.tabButtonActive]}
+                        activeOpacity={1}
                         onPress={() => setActiveEarningsTab('overview')}
                     >
                         <Text style={[styles.tabButtonText, activeEarningsTab === 'overview' && styles.tabButtonTextActive]}>
@@ -163,6 +165,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tabButton, activeEarningsTab === 'banking' && styles.tabButtonActive]}
+                        activeOpacity={1}
                         onPress={() => setActiveEarningsTab('banking')}
                     >
                         <Text style={[styles.tabButtonText, activeEarningsTab === 'banking' && styles.tabButtonTextActive]}>
@@ -171,6 +174,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.tabButton, activeEarningsTab === 'payout' && styles.tabButtonActive]}
+                        activeOpacity={1}
                         onPress={() => setActiveEarningsTab('payout')}
                     >
                         <Text style={[styles.tabButtonText, activeEarningsTab === 'payout' && styles.tabButtonTextActive]}>
@@ -289,6 +293,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                                                 styles.accountTypeButton,
                                                 newBankDetails.accountType === 'checking' && styles.accountTypeButtonSelected
                                             ]}
+                                            activeOpacity={1}
                                             onPress={() => setNewBankDetails(prev => ({ ...prev, accountType: 'checking' }))}
                                         >
                                             <Text style={[
@@ -303,6 +308,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                                                 styles.accountTypeButton,
                                                 newBankDetails.accountType === 'savings' && styles.accountTypeButtonSelected
                                             ]}
+                                            activeOpacity={1}
                                             onPress={() => setNewBankDetails(prev => ({ ...prev, accountType: 'savings' }))}
                                         >
                                             <Text style={[
@@ -480,16 +486,17 @@ const styles = StyleSheet.create({
 
     modalContainer: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#f8f9fa',
     },
     modalHeader: {
+        // backgroundColor: 'white',
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: '#e5e7eb',
     },
     modalTitle: {
         fontSize: 18,
@@ -497,10 +504,10 @@ const styles = StyleSheet.create({
         color: '#2d4150',
     },
     cancelButton: {
-        paddingVertical: 8,
+        padding: 4,
     },
     cancelButtonText: {
-        color: '#4CAF50',
+        color: '#6b7280',
         fontSize: 16,
     },
     modalContent: {
@@ -511,10 +518,11 @@ const styles = StyleSheet.create({
     // Tab Styles
     tabContainer: {
         flexDirection: 'row',
-        backgroundColor: '#f8f9fa',
+        // backgroundColor: '#fff',
         marginHorizontal: 16,
         borderRadius: 8,
         padding: 4,
+        marginTop: 16,
     },
     tabButton: {
         flex: 1,
@@ -546,20 +554,26 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 4,
+        // elevation: 3,
+        borderColor: "#DEE2E6",
+        borderWidth: 1,
         alignItems: 'center',
     },
     balanceCard: {
         flex: 0.48,
         backgroundColor: '#e8f5e8',
+        borderColor: "#DEE2E6",
+        borderWidth: 1,
     },
     pendingCard: {
         flex: 0.48,
         backgroundColor: '#fff3cd',
+        borderColor: "#DEE2E6",
+        borderWidth: 1,
     },
     earningsCardLabel: {
         fontSize: 12,
@@ -584,11 +598,13 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 4,
+        // elevation: 3,
+        borderColor: "#DEE2E6",
+        borderWidth: 1,
     },
     sectionTitle: {
         fontSize: 16,

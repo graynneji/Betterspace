@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { AuthAdapter } from "@/adapter/authAdapter";
 import { Client } from "@/utils/client";
 import { useState } from "react";

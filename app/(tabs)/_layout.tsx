@@ -67,7 +67,6 @@
 // }
 
 import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/ui/TabBarBackground';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
@@ -78,16 +77,16 @@ export default function TabLayout() {
 
 
   return (
-
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#222',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
+        // tabBarBackground: TabBarBackground,
         tabBarStyle: {
-          backgroundColor: '#fff',
-          // borderTopWidth: 1,
+          // backgroundColor: '#fff',
+          backgroundColor: '#f9fafb',
+          borderTopWidth: 1,
           borderTopColor: '#f1f5f9',
           elevation: 8,
           shadowColor: '#000',
@@ -104,9 +103,9 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="chat"
+        name="session"
         options={{
-          title: 'Chat',
+          title: 'Session',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               size={24}
@@ -159,6 +158,12 @@ export default function TabLayout() {
               color={color}
             />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="therapist-dashboard"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

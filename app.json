@@ -7,18 +7,35 @@
     "icon": "./assets/images/splashIcon.png",
     "scheme": "betterspace",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splashIcon.png",
       "resizeMode": "contain",
       "backgroundColor": "#4e7560"
     },
+    "reactNativeGestureHandler": {
+      "touchableOpacityActiveOpacity": 1
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "splash": {
+        "image": "./assets/images/splashIcon.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#4e7560"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/splashIcon.png",
+        "backgroundColor": "#4e7560"
+      },
+      "splash": {
+        "image": "./assets/images/splashIcon.png",
+        "resizeMode": "contain",
         "backgroundColor": "#4e7560"
       },
       "edgeToEdgeEnabled": true
@@ -27,17 +44,6 @@
       "favicon": "./assets/images/favicon.png",
       "bundler": "metro"
     },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splashIcon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#4e7560"
-        }
-      ]
-    ]
+    "plugins": ["expo-router"]
   }
 }

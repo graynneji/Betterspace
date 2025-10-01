@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 interface Category {
-    id: string;
+    id: number;
     name: string;
     icon: keyof typeof Ionicons.glyphMap;
     color: string;
@@ -17,8 +17,8 @@ interface Category {
 
 interface CategoryListProps {
     categories: Category[];
-    activeCategory: string;
-    setActiveCategory: (categoryId: string) => void;
+    activeCategory: number;
+    setActiveCategory: (categoryId: number) => void;
     setShowCategories: (show: boolean) => void;
 }
 
@@ -28,14 +28,14 @@ const CategoryList: React.FC<CategoryListProps> = ({
     setActiveCategory,
     setShowCategories
 }) => {
-    const handleCategoryPress = (categoryId: string): void => {
+    const handleCategoryPress = (categoryId: number): void => {
         setActiveCategory(categoryId);
         setShowCategories(false); // Hide categories after selection
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
+            {/* <View style={styles.header}>
                 <Text style={styles.title}>Categories</Text>
                 <TouchableOpacity
                     style={styles.closeBtn}
@@ -43,7 +43,7 @@ const CategoryList: React.FC<CategoryListProps> = ({
                 >
                     <Ionicons name="close" size={24} color="#6b7280" />
                 </TouchableOpacity>
-            </View>
+            </View> */}
 
             <ScrollView
                 horizontal
@@ -85,14 +85,16 @@ const CategoryList: React.FC<CategoryListProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'white',
+        // backgroundColor: 'white',
         borderRadius: 12,
         marginVertical: 8,
-        elevation: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        // elevation: 1,
+        // shadowColor: '#000',
+        // shadowOffset: { width: 0, height: 1 },
+        // shadowOpacity: 0.1,
+        // shadowRadius: 3,
+        // borderColor: "#DEE2E6",
+        // borderWidth: 1,
     },
     header: {
         flexDirection: 'row',
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     scrollContent: {
-        paddingHorizontal: 16,
+        // paddingHorizontal: 16,
         gap: 8,
     },
     categoryBtn: {

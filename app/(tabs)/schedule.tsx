@@ -4,7 +4,6 @@ import {
     Alert,
     Modal,
     Platform,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -13,6 +12,7 @@ import {
     View,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Event interface
 interface CalendarEvent {
@@ -54,6 +54,9 @@ const Schedule: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
+
+
+    // const {data} = useGetById()
 
     // Form state
     const [eventForm, setEventForm] = useState({
@@ -165,11 +168,11 @@ const Schedule: React.FC = () => {
                 category: eventForm.category,
             };
             setEvents(prev => [...prev, newEvent]);
+            console.log("newEvent", newEvent)
         }
-
         setIsModalVisible(false);
     };
-
+    console.log("event", events)
     // Delete event
     const deleteEvent = (eventId: string) => {
         Alert.alert(
@@ -204,7 +207,7 @@ const Schedule: React.FC = () => {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Schedule</Text>
                 <TouchableOpacity
@@ -222,6 +225,7 @@ const Schedule: React.FC = () => {
                 onDayPress={onDayPress}
                 markingType="multi-dot"
                 markedDates={getMarkedDates()}
+
                 theme={{
                     backgroundColor: '#ffffff',
                     calendarBackground: '#ffffff',
@@ -336,6 +340,16 @@ const Schedule: React.FC = () => {
                                     {eventForm.time.toTimeString().slice(0, 5)}
                                 </Text>
                             </TouchableOpacity>
+
+                            {showTimePicker && (
+                                <DateTimePicker
+                                    value={eventForm.time}
+                                    mode="time"
+                                    is24Hour={true}
+                                    display="default"
+                                    onChange={onTimeChange}
+                                />
+                            )}
                         </View>
 
                         <View style={styles.inputGroup}>
@@ -383,7 +397,7 @@ const Schedule: React.FC = () => {
                         </View>
                     </ScrollView>
 
-                    {showTimePicker && (
+                    {/* {showTimePicker && (
                         <DateTimePicker
                             value={eventForm.time}
                             mode="time"
@@ -391,7 +405,7 @@ const Schedule: React.FC = () => {
                             display="default"
                             onChange={onTimeChange}
                         />
-                    )}
+                    )} */}
                 </SafeAreaView>
             </Modal>
         </SafeAreaView>
@@ -409,9 +423,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        marginBottom: 10,
+        // backgroundColor: '#fff',
+        // borderBottomWidth: 1,
+        // borderBottomColor: '#e9ecef',
         elevation: 2,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
@@ -427,7 +442,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#4CAF50',
         paddingHorizontal: 16,
         paddingVertical: 8,
-        borderRadius: 20,
+        borderRadius: 8,
     },
     addButtonText: {
         color: '#fff',
@@ -455,6 +470,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     eventItem: {
+        // backgroundColor: '#fff',
         backgroundColor: '#f8f9fa',
         borderRadius: 12,
         padding: 16,

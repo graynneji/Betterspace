@@ -1,7 +1,8 @@
 import CreateAccount from "@/components/CreateAccount";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const GetStarted = () => {
     const navigation = useNavigation()

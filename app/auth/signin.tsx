@@ -6,8 +6,8 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { useNavigation, useRouter } from "expo-router";
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
-import { Alert, Keyboard, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Alert, Keyboard, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
 
@@ -136,7 +136,6 @@ const SignIn = () => {
 
     const handleSignIn = async () => {
         Keyboard.dismiss();
-        console.log("fire")
         const validationSchema = loginSchema.safeParse({
             email: formData.email,
             password: formData.password
@@ -155,7 +154,7 @@ const SignIn = () => {
         if (data && data?.user?.user_metadata?.designation === "therapist") {
             router.push("therapist-dashboard");
         } else {
-            router.push("chat");
+            router.push("session");
         }
     };
 
@@ -222,7 +221,7 @@ const SignIn = () => {
     return (
         <SafeAreaProvider>
             <SafeAreaView style={styles.container}>
-                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" translucent={true} />
 
 
                 <ScrollView
@@ -240,7 +239,7 @@ const SignIn = () => {
                         <Text style={styles.title}>Welcome Back</Text>
 
                         <Text style={styles.subtitle}>
-                            Sign in to your BetterSpace account
+                            Sign in to your Betterspace account
                         </Text>
                     </View>
                     <View style={styles.form}>

@@ -49,6 +49,7 @@ export class AuthService {
 
   async checkUser(): Promise<any> {
     const { data, error } = await this.authAdapter.getUser();
+    console.log("user check", error);
     if (error) {
       throw new Error("You are not authenticated");
     }
@@ -57,10 +58,12 @@ export class AuthService {
 
   async refreshSession(): Promise<any> {
     const { data, error } = await this.authAdapter.refreshOrClearSession();
+    //check later the error
+    console.log("eeeeeeeeeeeee", error);
     if (error || !data.session) {
       // session invalid or expired, remove local storage
       await AsyncStorage.removeItem("supabase.auth.token");
-      throw new Error("Session expired, please log in again.");
+      // throw new Error("Session expired, please log in again.");
     }
   }
 }

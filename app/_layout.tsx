@@ -1,17 +1,20 @@
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { toastConfig } from '@/components/toastConfig';
 import { AuthProvider } from '@/context/AuthContext';
+import { PatientIdProvider } from '@/context/patientIdContext';
 import { queryClient } from '@/utils/queryClient';
-import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 
-
+SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -20,24 +23,35 @@ export default function RootLayout() {
   });
 
 
+  useEffect(() => {
+    if (loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
   if (!loaded) {
     return null;
   }
 
   return (
+
     <AuthProvider>
-      <ThemeProvider value={DefaultTheme}>
-        {/* <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}> */}
-        <QueryClientProvider client={queryClient}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-            <Stack.Screen name="index" options={{ headerShown: false, headerShadowVisible: false, }} />
-          </Stack>
-        </QueryClientProvider>
-        <StatusBar style="auto" />
-        <Toast config={toastConfig} />
-      </ThemeProvider>
+      <PatientIdProvider>
+        {/* <ThemeProvider value={DefaultTheme}> */}
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <QueryClientProvider client={queryClient}>
+            <ErrorBoundary>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+                <Stack.Screen name="index" options={{ headerShown: false, headerShadowVisible: false, }} />
+              </Stack>
+            </ErrorBoundary>
+          </QueryClientProvider>
+          <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          <Toast config={toastConfig} />
+        </ThemeProvider>
+      </PatientIdProvider>
     </AuthProvider>
   );
 }
