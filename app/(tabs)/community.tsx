@@ -1,16 +1,18 @@
+import { Comment, LikesProps } from '@/app/(tabs)/discussion-view';
 import Avatar from '@/components/Avatar';
 import CategoryList from '@/components/CategoryList';
 import CreatePostModal from '@/components/CreatePostModal';
-import DiscussionView, { Comment, LikesProps } from '@/components/DiscussionView';
 import ErrorMessage from '@/components/ErrorMessage';
-import { useGetAll } from '@/hooks/useCrud';
-import { formatThreadTime } from '@/utils';
+import { useCheckAuth } from '@/context/AuthContext';
+import { useCrudCreate, useGetAll, useRpc } from '@/hooks/useCrud';
+import { capitalizeFirstLetter, formatThreadTime } from '@/utils';
 import { initialDiscussions as rawInitialDiscussions } from '@/utils/communityUtilis';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
 import {
     FlatList,
-
+    RefreshControl,
     StatusBar,
     StyleSheet,
     Text,
@@ -18,6 +20,7 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from 'react-native-toast-message';
 
 interface Author {
     id: string;
@@ -34,7 +37,7 @@ interface Author {
 //     isLiked: boolean;
 // }
 
-interface Discussion {
+export interface Discussion {
     id: string;
     title: string;
     content: string;
@@ -45,10 +48,23 @@ interface Discussion {
     // isLiked: boolean;
     views: number;
     is_urgent?: boolean;
-    is_annoymous?: boolean;
+    is_anonymous?: boolean;
     article_comments?: Comment[];
     article_likes?: LikesProps[];
 }
+//     id: string;
+//     title: string;
+//     content: string;
+//     author: string;
+//     category_id: number;
+//     created_at: string;
+//     // likes: number;
+//     // isLiked: boolean;
+//     is_annoymous?: boolean
+//     views: number;
+//     is_urgent?: boolean;
+//     article_comments?: Comment[];
+//     article_likes?: LikesProps[];
 
 interface Category {
     id: number;
@@ -61,7 +77,25 @@ interface CommunityProps {
     initialDiscussions: Discussion[];
     count: number;
 }
+export const categories: Category[] = [
+    { id: 0, name: "All Topics", icon: "people-outline", color: "#3b82f6" },
+    { id: 1, name: "Anxiety", icon: "heart-outline", color: "#8b5cf6" },
+    { id: 2, name: "Depression", icon: "chatbubble-outline", color: "#6366f1" },
+    { id: 3, name: "Relationships", icon: "heart", color: "#ec4899" },
+    { id: 4, name: "Career & Work", icon: "briefcase-outline", color: "#10b981" },
+    { id: 5, name: "Family", icon: "home-outline", color: "#f97316" },
+    { id: 6, name: "Self-Care", icon: "star-outline", color: "#eab308" },
+    { id: 7, name: "Personal Growth", icon: "trending-up-outline", color: "#14b8a6" },
+];
+export const getCategoryIcon = (categoryId: number): keyof typeof Ionicons.glyphMap => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.icon : "chatbubble-outline";
+};
 
+export const getCategoryColor = (categoryId: number): string => {
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.color : "#6b7280";
+};
 const sanitizeDiscussions = (discussions: any[]): Discussion[] => {
     return discussions.map(discussion => ({
         ...discussion,
@@ -84,6 +118,7 @@ const sanitizeDiscussions = (discussions: any[]): Discussion[] => {
 const initialDiscussions: Discussion[] = sanitizeDiscussions(rawInitialDiscussions);
 
 const Community: React.FC<CommunityProps> = () => {
+
     let count = initialDiscussions.length;
     const [isCreatePostOpen, setIsCreatePostOpen] = useState<boolean>(false);
     const [activeCategory, setActiveCategory] = useState<number>(0);
@@ -95,35 +130,30 @@ const Community: React.FC<CommunityProps> = () => {
     const [showCategories, setShowCategories] = useState<boolean>(false);
     const [showGuidelines, setShowGuidelines] = useState<boolean>(false);
     const flatListRef = useRef<FlatList>(null);
-
-    const categories: Category[] = [
-        { id: 0, name: "All Topics", icon: "people-outline", color: "#3b82f6" },
-        { id: 1, name: "Anxiety", icon: "heart-outline", color: "#8b5cf6" },
-        { id: 2, name: "Depression", icon: "chatbubble-outline", color: "#6366f1" },
-        { id: 3, name: "Relationships", icon: "heart", color: "#ec4899" },
-        { id: 4, name: "Career & Work", icon: "briefcase-outline", color: "#10b981" },
-        { id: 5, name: "Family", icon: "home-outline", color: "#f97316" },
-        { id: 6, name: "Self-Care", icon: "star-outline", color: "#eab308" },
-        { id: 7, name: "Personal Growth", icon: "trending-up-outline", color: "#14b8a6" },
-    ];
-
+    const [refreshing, setRefreshing] = useState(false);
+    const router = useRouter()
+    const { session } = useCheckAuth()
+    const userId = session?.user?.id!
     const { data, isLoading, error, refetch } = useGetAll('article', { orderBy: 'created_at', ascending: false }, "*, article_comments!article_id(*), article_likes!discussion_id(*)");
 
+    const onRefresh = async () => {
+        setRefreshing(true);
+
+        const start = Date.now();
+        await refetch();
+        // Assuming it returns a Promise
+
+        const elapsed = Date.now() - start;
+        const minDuration = 500; // Minimum 500ms spinner visibility
+
+        setTimeout(() => {
+            setRefreshing(false);
+        }, Math.max(0, minDuration - elapsed));
+    };
     // if (error) {
     //     refetch();
     // }
 
-
-    // Filter discussions based on category and search term
-    // const filteredDiscussions = useMemo(() => {
-    //     // return initialDiscussions.filter(discussion => {
-    //     return data?.result.filter(discussion => {
-    //         const matchesCategory = activeCategory === 0 || discussion.category === activeCategory;
-    //         const matchesSearch = discussion.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //             discussion.content.toLowerCase().includes(searchTerm.toLowerCase());
-    //         return matchesCategory && matchesSearch;
-    //     });
-    // }, [activeCategory, searchTerm]);
     const filteredDiscussions = useMemo(() => {
         if (!data?.result) return [];
         return data.result.filter(discussion => {
@@ -134,24 +164,48 @@ const Community: React.FC<CommunityProps> = () => {
         });
     }, [data?.result, activeCategory, searchTerm]);
 
+    const createLikesMutation = useCrudCreate("article_likes")
 
-    const getCategoryIcon = (categoryId: number): keyof typeof Ionicons.glyphMap => {
-        const category = categories.find((cat) => cat.id === categoryId);
-        return category ? category.icon : "chatbubble-outline";
+    const handleLikes = async (userId: string, likes: LikesProps[]): Promise<void> => {
+        Toast.show({
+            type: "success",
+            text1: "Post Created",
+            text2: "Your post has been shared with the community.",
+            visibilityTime: 2000,
+            autoHide: true,
+            topOffset: 60,
+        });
+
+        if (likes?.some(like => like.user_id === userId)) {
+            // User has already liked the post, so we remove the like
+            return
+        }
+        const post = {
+            user_id: userId,
+            discussion_id: discussion?.id,
+        };
+        await createLikesMutation.mutateAsync(post)
+
     };
+    const rpcViewMutation = useRpc("increment_views_bigint", ["article"])
 
-    const getCategoryColor = (categoryId: number): string => {
-        const category = categories.find((cat) => cat.id === categoryId);
-        return category ? category.color : "#6b7280";
-    };
+    const handleDiscussionPress = async (discussion: Discussion) => {
+        // setDiscussion(selectedDiscussion);
+        router.push({
+            pathname: "/(tabs)/discussion-view",
+            params: {
+                discussion: JSON.stringify(discussion),
+                icon: getCategoryIcon(discussion.category_id),
+                color: getCategoryColor(discussion.category_id),
+                userId: userId,
+                fullName: session?.user?.user_metadata?.full_name || "User",
+            }
+        })
+        // setShowDiscussionView(true);
 
-    const handleLikes = async (userId: string, discussionId: string): Promise<void> => {
-        console.log('Like pressed', userId, discussionId);
-    };
 
-    const handleDiscussionPress = (selectedDiscussion: Discussion) => {
-        setDiscussion(selectedDiscussion);
-        setShowDiscussionView(true);
+        const result = await rpcViewMutation.mutateAsync({ article_id: discussion.id })
+
         setViews(prev => prev + 1);
         // setCommentCount(selectedDiscussion.comments?.length || 0);
     };
@@ -164,14 +218,14 @@ const Community: React.FC<CommunityProps> = () => {
         >
             <View style={styles.discussionHeader}>
                 <View style={styles.authorInfo}>
-                    <Avatar annoymous={item?.is_annoymous} author={item.author} />
+                    <Avatar annoymous={item?.is_anonymous} author={item.author} />
                     {/* <View style={styles.avatar}>
                         <Text style={styles.avatarText}>
                             {!item?.is_annoymous ? item.author.charAt(0).toUpperCase() : "A"}
                         </Text>
                     </View> */}
                     <View>
-                        <Text style={styles.authorName}>{!item?.is_annoymous ? item.author : "Annoymous"}</Text>
+                        <Text style={styles.authorName}>{!item?.is_anonymous ? capitalizeFirstLetter(item.author) : "Annoymous"}</Text>
                         <Text style={styles.timestamp}>{formatThreadTime(item.created_at)}</Text>
                     </View>
                 </View>
@@ -191,16 +245,29 @@ const Community: React.FC<CommunityProps> = () => {
 
             <View style={styles.discussionFooter}>
                 <View style={styles.stats}>
+                    <TouchableOpacity
+                        onPress={() => handleLikes(userId, item.article_likes ?? [])}
+                        activeOpacity={1}
+
+                    >
+
+                        <View style={styles.statItem}>
+                            {/* <Ionicons name="heart-outline" size={16} color="#6b7280" />
+                        <Text style={styles.statText}>{item.article_likes?.length || 0}</Text> */}
+                            <Ionicons
+                                name={item?.article_likes?.some(like => like.user_id === userId) ? "heart" : "heart-outline"}
+                                size={20}
+                                color={item?.article_likes?.some(like => like.user_id === userId) ? "#ef4444" : "#6b7280"}
+                            />
+                            <Text style={styles.statText}>{item.article_likes?.length || 0}</Text>
+                        </View>
+                    </TouchableOpacity>
                     <View style={styles.statItem}>
-                        <Ionicons name="heart-outline" size={16} color="#6b7280" />
-                        <Text style={styles.statText}>{item.article_likes?.length || 0}</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="chatbubble-outline" size={16} color="#6b7280" />
+                        <Ionicons name="chatbubble-outline" size={20} color="#6b7280" />
                         <Text style={styles.statText}>{item.article_comments?.length || 0}</Text>
                     </View>
                     <View style={styles.statItem}>
-                        <Ionicons name="eye-outline" size={16} color="#6b7280" />
+                        <Ionicons name="eye-outline" size={20} color="#6b7280" />
                         <Text style={styles.statText}>{item.views}</Text>
                     </View>
                 </View>
@@ -289,53 +356,64 @@ const Community: React.FC<CommunityProps> = () => {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-
+            <TouchableOpacity
+                style={styles.createPostBtn}
+                onPress={() => setIsCreatePostOpen(true)}
+            >
+                {/* <Text style={styles.createPostBtnText}>Post</Text> */}
+                <Ionicons name='add-outline' size={30} color="#fff" />
+            </TouchableOpacity>
             {/* Header */}
             {!showDiscussionView && <View style={styles.header}>
                 <Text style={styles.title}>Community</Text>
                 <View style={styles.headerActions}>
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={styles.filterBtn}
                         onPress={() => setShowCategories(!showCategories)}
                     >
                         <Ionicons name="funnel-outline" size={24} color="#6b7280" />
                     </TouchableOpacity>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={styles.createPostBtn}
                         onPress={() => setIsCreatePostOpen(true)}
                     >
                         <Text style={styles.createPostBtnText}>Post</Text>
-                    </TouchableOpacity>
+                        <Ionicons name='add-outline' size={30} color="#6b7280" />
+                    </TouchableOpacity> */}
                 </View>
             </View>}
             {/* Main Content - Discussion List or Single Discussion View */}
-            {showDiscussionView ? (
-                <DiscussionView
-                    discussion={discussion}
-                    setShowDiscussionView={setShowDiscussionView}
-                    categories={categories}
-                    getCategoryIcon={getCategoryIcon}
-                    getCategoryColor={getCategoryColor}
-                    setCommentCount={setCommentCount}
-                    commentCount={commentCount}
-                    views={views}
-                    handleLikes={handleLikes}
-                />
-            ) : (
-                <FlatList
-                    ref={flatListRef}
-                    style={styles.content}
-                    data={filteredDiscussions}
-                    renderItem={renderDiscussionItem}
-                    keyExtractor={(item) => item.id}
-                    ListHeaderComponent={ListHeaderComponent}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.flatListContainer}
-                    initialNumToRender={10}
-                    maxToRenderPerBatch={5}
-                    windowSize={10}
-                />
-            )}
+            {/* <DiscussionView
+                // discussion={discussion}
+                setShowDiscussionView={setShowDiscussionView}
+                categories={categories}
+                getCategoryIcon={getCategoryIcon}
+                getCategoryColor={getCategoryColor}
+                setCommentCount={setCommentCount}
+                commentCount={commentCount}
+                views={views}
+                handleLikes={handleLikes}
+            /> */}
+            {/* {showDiscussionView ? (
+            ) : ( */}
+            <FlatList
+                ref={flatListRef}
+                style={styles.content}
+                data={filteredDiscussions}
+                renderItem={renderDiscussionItem}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                keyExtractor={(item) => item.id}
+                ListHeaderComponent={ListHeaderComponent}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.flatListContainer}
+                initialNumToRender={10}
+                maxToRenderPerBatch={5}
+                windowSize={10}
+            />
+            {/* )} */}
 
             {/* Create Post Modal */}
             <CreatePostModal
@@ -351,6 +429,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f9fafb',
+        position: 'relative'
     },
     header: {
         // backgroundColor: 'white',
@@ -376,12 +455,18 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
+        justifyContent: 'center'
     },
     createPostBtn: {
         backgroundColor: '#4CAF50',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
+        // paddingHorizontal: 16,
+        // paddingVertical: 8,
+        padding: 16,
+        borderRadius: 100,
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        zIndex: 1
     },
     createPostBtnText: {
         color: 'white',

@@ -1,5 +1,4 @@
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { toastConfig } from '@/components/toastConfig';
 import { AuthProvider } from '@/context/AuthContext';
 import { PatientIdProvider } from '@/context/patientIdContext';
 import { queryClient } from '@/utils/queryClient';
@@ -13,6 +12,9 @@ import React, { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
+// import { createNotifications } from 'react-native-notificated';
+// const { NotificationsProvider, useNotifications } = createNotifications();
+
 
 SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
@@ -49,7 +51,8 @@ export default function RootLayout() {
             </ErrorBoundary>
           </QueryClientProvider>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-          <Toast config={toastConfig} />
+          <Toast />
+          {/* <Toast config={toastConfig} /> */}
         </ThemeProvider>
       </PatientIdProvider>
     </AuthProvider>

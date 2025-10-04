@@ -4,7 +4,7 @@ import { AuthService } from "@/services/authService";
 import { Client } from "@/utils/client";
 import { Session } from "@supabase/supabase-js";
 import * as SecureStore from 'expo-secure-store';
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const client = new Client();
 const authAdapter = new AuthAdapter(client);
@@ -43,30 +43,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // get initial session
-    //  const init = async() =>{
-    //     try{
-    // callRefresh()
-    //   authService.checkUser().then(({ data }: DataUser) => {
-    //     setSession(data?.session ?? null);
-    //   });
-    // }catch(err){
-    //   setSession(null)
-    // }finally{
-    //       setLoading(false);
+    const init = async () => {
+      try {
+        callRefresh()
+        // await authService.checkUser().then(({ data }: DataUser) => {
+        //   setSession(data?.session ?? null);
+        // });
+        const { data } = await authService
+          .checkUser()
+          .catch(() => ({ data: { session: null } }));
 
-    //     }
-    //   }
-    // init()
-    callRefresh()
-    authService.checkUser().then(({ data }: DataUser) => {
-      setSession(data?.session ?? null);
-      setLoading(false);
-    });
+        setSession(data?.session ?? null);
+      } catch (err) {
+        setSession(null)
+      } finally {
+        setLoading(false);
+      }
+    }
+    init()
+    // callRefresh()
+    // authService.checkUser().then(({ data }: DataUser) => {
+    //   setSession(data?.session ?? null);
+    //   setLoading(false);
+    // });
 
     // subscribe to changes
-    const subscription = authAdapter.onAuthStateChange((session: Session | null) => {
+    const subscription = authService.onAuthChange((session: Session | null) => {
       setSession(session);
     });
+    // const subscription = authAdapter.onAuthStateChange((session: Session | null) => {
+    //   setSession(session);
+    // });
 
     return () => {
       subscription?.unsubscribe?.();
@@ -109,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, loading, login, register, logout }}>
+    <AuthContext.Provider value={useMemo(() => ({ session, loading, login, register, logout }), [session, loading])}>
       {children}
     </AuthContext.Provider>
   );

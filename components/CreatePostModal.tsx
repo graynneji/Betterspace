@@ -1,3 +1,5 @@
+import { useCheckAuth } from '@/context/AuthContext';
+import { useCrudCreate } from '@/hooks/useCrud';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -13,6 +15,18 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+
+interface newPost {
+    title: string;
+    content: string;
+    category_id: number | undefined;
+    is_urgent: boolean;
+    is_anonymous: boolean
+    author_id: string | number;
+    author: string;
+    tags: string;
+}
 
 interface Category {
     id: number;
@@ -28,65 +42,61 @@ interface CreatePostModalProps {
 }
 
 const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, categories }) => {
-    const [title, setTitle] = useState<string>('');
-    const [content, setContent] = useState<string>('');
-    const [selectedCategory, setSelectedCategory] = useState<number>();
-    const [isUrgent, setIsUrgent] = useState<boolean>(false);
-    const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
+    const { session } = useCheckAuth()
+    const initialPost = {
+        title: '',
+        content: '',
+        category_id: undefined,
+        is_urgent: false,
+        is_anonymous: false,
+        author_id: session?.user?.id!,
+        author: session?.user?.user_metadata?.full_name! || "Betterspace User",
+        tags: ''
+    }
+
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [newPost, setNewPost] = useState<newPost>(initialPost)
+    const createPostMutation = useCrudCreate<newPost>("article")
 
     const handleSubmit = async (): Promise<void> => {
-        if (!title.trim() || !content.trim() || !selectedCategory) {
-            Alert.alert(
-                'Missing Information',
-                'Please fill in all required fields and select a category.'
-            );
+        if (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id) {
+            Alert.alert('Missing Information', 'Please fill in all required fields and select a category.');
             return;
         }
 
         setIsSubmitting(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Here you would typically make an API call to create the post
-            console.log('Creating post:', {
-                title: title.trim(),
-                content: content.trim(),
-                category: selectedCategory,
-                isUrgent,
-                isAnonymous,
-                timestamp: new Date().toISOString(),
+            const result = await createPostMutation.mutateAsync(newPost);  // ✅ this ensures Supabase actually responded
+            if (result.error) {
+                throw new Error(result.error.message || 'Failed to create post.');
+            }
+            // Alert.alert('Post Created', 'Your post has been shared with the community.', [{ text: 'OK' }]);
+            Toast.show({
+                type: "success",
+                text1: "Post Created",
+                text2: "Your post has been shared with the community.",
+                visibilityTime: 2000,
+                autoHide: true,
+                topOffset: 60,
             });
 
-            // Reset form
-            setTitle('');
-            setContent('');
-            setSelectedCategory(undefined);
-            setIsUrgent(false);
-            setIsAnonymous(false);
-
-            onClose();
-
-            Alert.alert(
-                'Post Created',
-                'Your post has been shared with the community.',
-                [{ text: 'OK' }]
-            );
+            setNewPost(initialPost);
+            onClose(); // ✅ now only closes *after* the insert succeeds
         } catch (error) {
-            Alert.alert(
-                'Error',
-                'Failed to create post. Please try again.',
-                [{ text: 'OK' }]
-            );
+            // Alert.alert('Error', (error as Error).message || 'Failed to create post.');
+            Toast.show({
+                type: "Error",
+                text1: (error as Error).message || 'Failed to create post'
+                // text2: "Your post has been shared with the community.",
+            });
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleClose = (): void => {
-        if (title.trim() || content.trim()) {
+        if (newPost.title.trim() || newPost.content.trim()) {
             Alert.alert(
                 'Discard Post?',
                 'You have unsaved changes. Are you sure you want to close?',
@@ -96,11 +106,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         text: 'Discard',
                         style: 'destructive',
                         onPress: () => {
-                            setTitle('');
-                            setContent('');
-                            setSelectedCategory(undefined);
-                            setIsUrgent(false);
-                            setIsAnonymous(false);
+                            setNewPost(initialPost)
+
                             onClose();
                         }
                     }
@@ -159,12 +166,14 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
 
     const renderCategoryOption = (category: Category) => (
         <TouchableOpacity
+            activeOpacity={1}
             key={category.id}
             style={[
                 styles.categoryOption,
-                selectedCategory === category.id && styles.categoryOptionSelected
+                newPost.category_id === category.id && styles.categoryOptionSelected
             ]}
-            onPress={() => setSelectedCategory(category.id)}
+            onPress={() => setNewPost({ ...newPost, category_id: category.id, tags: category.name.toLowerCase() })}
+        // onPress={() => setSelectedCategory(category.id)}
         >
             <View style={[
                 styles.categoryIconContainer,
@@ -174,11 +183,11 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
             </View>
             <Text style={[
                 styles.categoryOptionText,
-                selectedCategory === category.id && styles.categoryOptionTextSelected
+                newPost.category_id === category.id && styles.categoryOptionTextSelected
             ]}>
                 {category.name}
             </Text>
-            {selectedCategory === category.id && (
+            {newPost.category_id === category.id && (
                 <Ionicons name="checkmark-circle" size={20} color="#3b82f6" />
             )}
         </TouchableOpacity>
@@ -198,6 +207,7 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={styles.cancelBtn}
                         onPress={handleClose}
                     >
@@ -207,17 +217,18 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                     <Text style={styles.headerTitle}>New Post</Text>
 
                     <TouchableOpacity
+                        activeOpacity={1}
                         style={[
                             styles.submitBtn,
-                            (!title.trim() || !content.trim() || !selectedCategory || isSubmitting) &&
+                            (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting) &&
                             styles.submitBtnDisabled
                         ]}
                         onPress={handleSubmit}
-                        disabled={!title.trim() || !content.trim() || !selectedCategory || isSubmitting}
+                        disabled={!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting}
                     >
                         <Text style={[
                             styles.submitBtnText,
-                            (!title.trim() || !content.trim() || !selectedCategory || isSubmitting) &&
+                            (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting) &&
                             styles.submitBtnTextDisabled
                         ]}>
                             {isSubmitting ? 'Posting...' : 'Post'}
@@ -242,12 +253,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         <TextInput
                             style={styles.titleInput}
                             placeholder="What would you like to discuss?"
-                            value={title}
-                            onChangeText={setTitle}
+                            value={newPost.title}
+                            onChangeText={(title) => setNewPost({ ...newPost, title })}
+                            // onChangeText={setTitle}
                             maxLength={100}
                             placeholderTextColor="#9ca3af"
                         />
-                        <Text style={styles.charCount}>{title.length}/100</Text>
+                        <Text style={styles.charCount}>{newPost.title.length}/100</Text>
                     </View>
 
                     {/* Content Input */}
@@ -258,14 +270,16 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         <TextInput
                             style={styles.contentInput}
                             placeholder="Share your thoughts, experiences, or questions..."
-                            value={content}
-                            onChangeText={setContent}
+                            value={newPost.content}
+                            // value={content}
+                            onChangeText={(content) => setNewPost({ ...newPost, content })}
+                            // onChangeText={setContent}
                             multiline
                             maxLength={1000}
                             textAlignVertical="top"
                             placeholderTextColor="#9ca3af"
                         />
-                        <Text style={styles.charCount}>{content.length}/1000</Text>
+                        <Text style={styles.charCount}>{newPost.content.length}/1000</Text>
                     </View>
 
                     {/* Category Selection */}
@@ -288,8 +302,10 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         <Text style={styles.sectionTitle}>Options</Text>
 
                         <TouchableOpacity
+                            activeOpacity={1}
                             style={styles.optionItem}
-                            onPress={() => setIsUrgent(!isUrgent)}
+                            onPress={() => setNewPost({ ...newPost, is_urgent: !newPost.is_urgent })}
+                        // onPress={() => setIsUrgent(!isUrgent)}
                         >
                             <View style={styles.optionContent}>
                                 <View style={styles.optionIcon}>
@@ -304,15 +320,17 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                             </View>
                             <View style={[
                                 styles.toggle,
-                                isUrgent && styles.toggleActive
+                                newPost.is_urgent && styles.toggleActive
                             ]}>
-                                {isUrgent && <Ionicons name="checkmark" size={16} color="white" />}
+                                {newPost.is_urgent && <Ionicons name="checkmark" size={16} color="white" />}
                             </View>
                         </TouchableOpacity>
 
                         <TouchableOpacity
+                            activeOpacity={1}
                             style={styles.optionItem}
-                            onPress={() => setIsAnonymous(!isAnonymous)}
+                            onPress={() => setNewPost({ ...newPost, is_anonymous: !newPost.is_anonymous })}
+                        // onPress={() => setIsAnonymous(!isAnonymous)}
                         >
                             <View style={styles.optionContent}>
                                 <View style={styles.optionIcon}>
@@ -327,9 +345,9 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                             </View>
                             <View style={[
                                 styles.toggle,
-                                isAnonymous && styles.toggleActive
+                                newPost.is_anonymous && styles.toggleActive
                             ]}>
-                                {isAnonymous && <Ionicons name="checkmark" size={16} color="white" />}
+                                {newPost.is_anonymous && <Ionicons name="checkmark" size={16} color="white" />}
                             </View>
                         </TouchableOpacity>
                     </View>

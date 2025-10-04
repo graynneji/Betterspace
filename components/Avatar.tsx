@@ -9,7 +9,7 @@ const Avatar: React.FC<AvatarProps> = ({ annoymous, author }) => {
     return (
         <View style={styles.avatar}>
             <Text style={styles.avatarText}>
-                {!annoymous ? author.charAt(0).toUpperCase() : "A"}
+                {!annoymous ? author?.charAt(0).toUpperCase() : "A"}
             </Text>
         </View>
     )

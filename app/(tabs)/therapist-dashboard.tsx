@@ -1,13 +1,14 @@
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { PatientNote, Patients } from '@/types';
-import { formatDate } from '@/utils';
+import { capitalizeFirstLetter, formatDate } from '@/utils';
 import { generatePatientId } from '@/utils/uniqueId';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { Suspense, useState } from 'react';
 import {
     Alert,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Text,
@@ -43,16 +44,26 @@ const TherapistDashboard: React.FC = () => {
     const router = useRouter()
     const { session } = useCheckAuth()
     const senderId = session?.user?.id!
-    const { data: therapistData, isLoading: isLoad, error: therapistError, refetch: refetch1, isError } = useGetById("therapist", { therapist_id: senderId }, "id, balance, pending, total_earning", !!senderId)
+    const { data: therapistData, isLoading: isLoad, error: therapistError, refetch: refetch1, isError } = useGetById("therapist", { therapist_id: senderId }, "id, balance, pending, total_earning", !!senderId, {})
 
     const therapistId = therapistData?.result[0]?.id;
-    const { data, isLoading, error, refetch } = useGetById("patients", { therapist: therapistId }, "id, created_at, name, therapist, patient_id, appointment, is_subscribed, subscription, patient_notes!patient_id(*)", !!therapistId)
-
+    const { data, isLoading, error, refetch } = useGetById("patients", { therapist: therapistId }, "id, created_at, name, therapist, patient_id, appointment, is_subscribed, subscription, patient_notes!patient_id(*)", !!therapistId, {})
+    const [refreshing, setRefreshing] = useState(false);
     const handleRefetch = () => {
         refetch1()
         refetch()
     }
-    const handleRecieverId = (patient_id: string, id: number) => {
+
+    const onRefresh = () => {
+        try {
+            setRefreshing(true);
+            handleRefetch();
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
+    const handleRecieverId = (patient_id: string, id: number, patient_name: string) => {
         const receiverId = patient_id;
         // setPatientId(receiverId)
 
@@ -63,7 +74,8 @@ const TherapistDashboard: React.FC = () => {
             //while patient_id is uuid used for for the messaging
             params: {
                 id: String(id),
-                patientId: receiverId
+                patientId: receiverId,
+                patientName: patient_name
             },
         });
     }
@@ -191,7 +203,7 @@ const TherapistDashboard: React.FC = () => {
                 {
                     text: 'Open Chat', onPress: () => {
                         // Navigate to secure chat within the app
-                        handleRecieverId(patient.patient_id, patient.id)
+                        handleRecieverId(patient.patient_id, patient.id, patient.name)
                     }
                 }
             ]
@@ -243,11 +255,11 @@ const TherapistDashboard: React.FC = () => {
                 <View style={styles.header}>
                     <Text style={styles.headerTitle}>My Patients</Text>
                     <TouchableOpacity
-                        style={styles.earningsButton}
+                        // style={styles.earningsButton}
                         onPress={openEarningsModal}
                     >
-                        <Ionicons name='wallet-outline' size={20} color='#f8f9f8' />
-                        <Text style={styles.earningsButtonText}>Earnings</Text>
+                        <Ionicons name='wallet-outline' size={30} color='#2d4150' />
+                        {/* <Text style={styles.earningsButtonText}>Earnings</Text> */}
                     </TouchableOpacity>
 
                 </View>
@@ -262,7 +274,9 @@ const TherapistDashboard: React.FC = () => {
                     />
                 </View>
 
-                <ScrollView style={styles.patientsList}>
+                <ScrollView style={styles.patientsList} refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
                     <Text style={styles.headerSubtitle}>{data?.result?.length} total patients</Text>
                     <Suspense fallback={<Text style={{ marginTop: 12 }}>Loading...</Text>}>
                         {(error || therapistError || isError) ? (
@@ -280,14 +294,18 @@ const TherapistDashboard: React.FC = () => {
                             >
                                 <View style={styles.patientHeader}>
                                     <View style={styles.patientInfo}>
-                                        <Text style={styles.patientName}>{patient.name}</Text>
-                                        <Text style={styles.patientId}>ID: {generatePatientId(patient?.created_at, patient?.id)}</Text>
+                                        <Text style={styles.patientName}>{capitalizeFirstLetter(patient.name)}</Text>
+                                        <View style={styles.patientIdContainer}>
+
+                                            <Ionicons name="card-outline" size={12} color="#6c757d" />
+                                            <Text style={styles.patientId}>ID: {generatePatientId(patient?.created_at, patient?.id)}</Text>
+                                        </View>
                                     </View>
                                     <View style={[
                                         styles.statusBadge,
-                                        { backgroundColor: getStatusColor('active') }
+                                        { backgroundColor: getStatusColor(patient.is_subscribed ? 'active' : 'inactive') }
                                     ]}>
-                                        <Text style={styles.statusText}>active</Text>
+                                        <Text style={styles.statusText}>{patient?.is_subscribed ? 'active' : 'inactive'}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.patientDetails}>
@@ -327,14 +345,14 @@ const TherapistDashboard: React.FC = () => {
                         <Text style={styles.backButtonText}>Back</Text>
                     </View>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{selectedPatient.name}</Text>
+                <Text style={styles.headerTitle}>{capitalizeFirstLetter(selectedPatient.name)}</Text>
                 <TouchableOpacity
                     onPress={() => navigateToChat(selectedPatient)}
-                    style={styles.chatButton}
+                // style={styles.chatButton}
                 >
-                    <Ionicons name='chatbubbles-outline' size={20} color='#f8f9f8' />
+                    <Ionicons name='chatbubbles-outline' size={30} color='#2d4150' />
 
-                    <Text style={styles.chatButtonText}>Chat</Text>
+                    {/* <Text style={styles.chatButtonText}>Chat</Text> */}
                 </TouchableOpacity>
             </View>
 
@@ -582,6 +600,11 @@ const styles = StyleSheet.create({
     },
     patientInfo: {
         flex: 1,
+    },
+    patientIdContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
     },
     patientName: {
         fontSize: 18,

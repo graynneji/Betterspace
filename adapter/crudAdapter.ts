@@ -1,4 +1,5 @@
 import { Client } from "@/utils/client";
+import { createClient } from "@supabase/supabase-js";
 
 export interface ReadOptions {
   or?: string;
@@ -6,6 +7,7 @@ export interface ReadOptions {
   range?: { from: number; to: number };
   count?: "exact" | "planned" | "estimated";
   lt?: { column: string; value: any };
+  match?: Record<string, any>;
 }
 export class CrudAdapter {
   constructor(private client: Client) {}
@@ -55,15 +57,20 @@ export class CrudAdapter {
     if (options.range)
       query = query.range(options.range.from, options.range.to);
     if (options.lt) query = query.lt(options.lt.column, options.lt.value);
+    if (options.match) query = query.match(options.match);
     return await query;
   }
 
   update<T>(table: string, id: string | number, payload: Partial<T>) {
-    return this.client.supabase
-      .from(table)
-      .update(payload)
-      .eq("id", id)
-      .select();
+    if (table === "auth") {
+      return this.client.supabase.auth.updateUser(payload);
+    } else {
+      return this.client.supabase
+        .from(table)
+        .update(payload)
+        .eq("id", id)
+        .select();
+    }
   }
 
   delete(table: string, id: string | number) {
@@ -71,6 +78,11 @@ export class CrudAdapter {
   }
 
   rpc<T>(fn: string, params?: Partial<T>) {
-    return this.client.supabase.rpc(fn, params);
+    const supabase = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
+    );
+    return supabase.rpc(fn, params);
+    // return this.client.supabase.rpc(fn, params);
   }
 }

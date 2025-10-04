@@ -1,4 +1,4 @@
-import { CrudAdapter } from "@/adapter/crudAdapter";
+import { CrudAdapter, ReadOptions } from "@/adapter/crudAdapter";
 import { CrudService } from "@/services/crudService";
 import { Client } from "@/utils/client";
 import { queryClient } from "@/utils/queryClient";
@@ -8,11 +8,25 @@ const client = new Client();
 const crudAdapter = new CrudAdapter(client);
 const crudService = new CrudService(crudAdapter);
 
-export function useCrudCreate<T>(table: string, invalidateKey?: any[]) {
+export function useCrudCreate<T>(
+  table: string,
+  invalidateKeys?: any[] | any[][]
+) {
   return useMutation({
     mutationFn: (payload: Partial<T>) => crudService.create(table, payload),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: invalidateKey ?? [table] }),
+    onSuccess: () => {
+      if (Array.isArray(invalidateKeys?.[0])) {
+        // case: multiple keys
+        (invalidateKeys as any[][]).forEach((key) => {
+          queryClient.invalidateQueries({ queryKey: key });
+        });
+      } else {
+        // case: single key
+        queryClient.invalidateQueries({
+          queryKey: (invalidateKeys as any[]) ?? [table],
+        });
+      }
+    },
   });
 }
 
@@ -35,17 +49,23 @@ export function useGetById<T>(
   table: string,
   filters: Partial<T>,
   column: string,
-  enabled: boolean = true
+  enabled: boolean = true,
+  options?: ReadOptions // ✅ Add this
 ) {
   return useQuery({
-    queryKey: [table, JSON.stringify(filters), column],
+    queryKey: [table, JSON.stringify(filters), column, JSON.stringify(options)],
     queryFn: async ({ queryKey }) => {
-      const [table, filter, column] = queryKey as [string, string, string];
-      console.log(table, filter, column);
+      const [table, filter, column, options] = queryKey as [
+        string,
+        string,
+        string,
+        string,
+      ];
       return await crudService.getUserById<T>(
         table,
         JSON.parse(filter),
-        column
+        column,
+        JSON.parse(options)
       );
     },
     enabled,
@@ -93,5 +113,16 @@ export function useRpc<T>(fn: string, invalidateKey?: any[]) {
     mutationFn: (params: Partial<T>) => crudService.rpcCall(fn, params),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: invalidateKey ?? [] }),
+  });
+}
+export async function useSpecialLikes(
+  table: string,
+  filters: any,
+  column: string,
+  options?: ReadOptions
+): Promise<{ result: any[]; count: number }> {
+  return await crudService.getUserById(table, filters, column, {
+    ...options,
+    // count: "exact",
   });
 }

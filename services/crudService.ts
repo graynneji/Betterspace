@@ -1,6 +1,7 @@
 import { CrudAdapter, ReadOptions } from "@/adapter/crudAdapter";
 import { getErrorMessage } from "@/utils";
 import { Alert } from "react-native";
+import Toast from "react-native-toast-message";
 
 export class CrudService {
   constructor(private crudAdapter: CrudAdapter) {}
@@ -46,19 +47,36 @@ export class CrudService {
         options
       );
       if (error) throw new Error(error.message);
-      console.log(error);
       return { result: data, count: count ?? 0 };
+    } catch (err: unknown) {
+      // return new Promise((resolve, reject) => {
+      // Alert.alert("Something went wrong", getErrorMessage(err), [
+      //   { text: "Cancel", style: "cancel", onPress: () => reject(err) },
+      // ]);
+      Toast.show({
+        type: "error",
+        text1: "Error Occurred",
+        text2: getErrorMessage(err),
+        visibilityTime: 500,
+        autoHide: true,
+        topOffset: 60,
+      });
+      // setTimeout(() => Toast.hide(), 500);
+      // });
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  async updateUser<T>(table: string, id: string, payload: Partial<T>) {
+    try {
+      return await this.crudAdapter.update(table, id, payload);
     } catch (err: unknown) {
       return new Promise((resolve, reject) => {
         Alert.alert("Something went wrong", getErrorMessage(err), [
           { text: "Cancel", style: "cancel", onPress: () => reject(err) },
         ]);
       });
-      // throw err instanceof Error ? err : new Error(String(err));
     }
-  }
-  async updateUser<T>(table: string, id: string, payload: Partial<T>) {
-    return await this.crudAdapter.update(table, id, payload);
   }
 
   async deleteUser(id: string) {

@@ -17,7 +17,7 @@ interface NotesProps {
 }
 
 const Notes: React.FC<NotesProps> = ({ openAddNoteModal, selectedPatient, getNoteTypeColor }) => {
-    const { data: patientNotes, error } = useGetById("patient_notes", { patient_id: selectedPatient?.id }, "*")
+    const { data: patientNotes, error } = useGetById("patient_notes", { patient_id: selectedPatient?.id }, "*", undefined, {})
     const notesCount = patientNotes?.result?.length || 0;
     const hasNotes = notesCount > 0;
     return (

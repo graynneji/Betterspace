@@ -4,9 +4,9 @@ import WelcomeTip from '@/components/WelcomeTipModal';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { useMessage } from '@/hooks/useMessage';
-import { formatDate, formatTime, isToday } from '@/utils';
+import { capitalizeFirstLetter, formatDate, formatTime, isToday } from '@/utils';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { Dispatch, SetStateAction, useEffect, useLayoutEffect, useRef, useState, } from 'react';
 import {
   Alert,
@@ -79,7 +79,8 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
   const [showWelcomeTip, setShowWelcomeTip] = useState(true);
   const [showTherapistBio, setShowTherapistBio] = useState(false);
   const [isNewUser] = useState(false);
-  const { id, patientId } = useLocalSearchParams<{ id?: string; patientId?: string }>()
+  const { session } = useCheckAuth()
+  const { id, patientId, patientName } = useLocalSearchParams<{ id?: string; patientId?: string, patientName?: string }>()
   const createMessageMutation = useCrudCreate<sendMessage>("messages")
   const router = useRouter()
   const listRef = useRef<FlatList<any>>(null);
@@ -99,7 +100,17 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
       receiverId,
     },
   )
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!session?.user) return;
 
+      const isTherapist = session.user.user_metadata?.designation === "therapist";
+
+      if (isTherapist && !patientId) {
+        router.replace("/therapist-dashboard");
+      }
+    }, [session, patientId])
+  );
 
   const groupMessagesByDate = () => {
     const groups: Record<string, Message[]> = {};
@@ -149,7 +160,7 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
         sender_id: senderId,
         reciever_id: receiverId
       };
-      createMessageMutation.mutate(newMessage)
+      createMessageMutation.mutateAsync(newMessage)
       // setMessages([...messages, newMessage]);
       setMessageText('');
     }
@@ -177,95 +188,6 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
     );
   };
 
-  // const WelcomeTip = () => (
-  //   <Modal
-  //     visible={showWelcomeTip && isNewUser}
-  //     transparent={true}
-  //     animationType="fade"
-  //   >
-  //     <View style={styles.modalOverlay}>
-  //       <View style={styles.welcomeTipContainer}>
-  //         <View style={styles.tipHeader}>
-  //           <Ionicons name="bulb-outline" size={24} color="#4CAF50" />
-  //           <Text style={styles.tipTitle}>Welcome to BetterSpace!</Text>
-  //         </View>
-  //         <Text style={styles.tipText}>
-  //           • Feel free to share what&apos;s on your mind{'\n'}
-  //           • Use audio/video calls when you need real-time support{'\n'}
-  //           • Click on Dr. Sarah&apos;s name to view her profile{'\n'}
-  //           • Your conversations are private and secure
-  //         </Text>
-  //         <TouchableOpacity
-  //           style={styles.tipButton}
-  //           onPress={() => setShowWelcomeTip(false)}
-  //         >
-  //           <Text style={styles.tipButtonText}>Got it!</Text>
-  //         </TouchableOpacity>
-  //       </View>
-  //     </View>
-  //   </Modal>
-  // );
-
-  // const TherapistBioModal = () => (
-  //   <Modal
-  //     visible={showTherapistBio}
-  //     transparent={true}
-  //     animationType="slide"
-  //   >
-  //     <View style={styles.bioModalOverlay}>
-  //       <View style={styles.bioContainer}>
-  //         <View style={styles.bioHeader}>
-  //           <TouchableOpacity
-  //             style={styles.closeButton}
-  //             onPress={() => setShowTherapistBio(false)}
-  //           >
-  //             <Ionicons name="close" size={24} color="#666" />
-  //           </TouchableOpacity>
-  //         </View>
-
-  //         <View style={styles.bioContent}>
-  //           <Image
-  //             source={{ uri: therapistInfo.image }}
-  //             style={styles.therapistImage}
-  //           />
-  //           <Text style={styles.therapistName}>{therapistInfo.name}</Text>
-  //           <Text style={styles.therapistSpecialty}>{therapistInfo.specialty}</Text>
-
-  //           <View style={styles.statsContainer}>
-  //             <View style={styles.statItem}>
-  //               <Text style={styles.statNumber}>{therapistInfo.rating}</Text>
-  //               <Text style={styles.statLabel}>Rating</Text>
-  //               <Ionicons name="star" size={16} color="#FFD700" />
-  //             </View>
-  //             <View style={styles.statItem}>
-  //               <Text style={styles.statNumber}>{therapistInfo.sessions}</Text>
-  //               <Text style={styles.statLabel}>Sessions</Text>
-  //             </View>
-  //             <View style={styles.statItem}>
-  //               <Text style={styles.statNumber}>{therapistInfo.experience}</Text>
-  //               <Text style={styles.statLabel}>Experience</Text>
-  //             </View>
-  //           </View>
-
-  //           <Text style={styles.bioSectionTitle}>Education</Text>
-  //           <Text style={styles.bioText}>{therapistInfo.education}</Text>
-
-  //           <Text style={styles.bioSectionTitle}>Specializations</Text>
-  //           <View style={styles.specializationsContainer}>
-  //             {therapistInfo.specializations.map((spec, index) => (
-  //               <View key={index} style={styles.specializationTag}>
-  //                 <Text style={styles.specializationText}>{spec}</Text>
-  //               </View>
-  //             ))}
-  //           </View>
-
-  //           <Text style={styles.bioSectionTitle}>About</Text>
-  //           <Text style={styles.bioText}>{therapistInfo.bio}</Text>
-  //         </View>
-  //       </View>
-  //     </View>
-  //   </Modal>
-  // );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -290,11 +212,11 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
             style={styles.headerAvatar}
           />
           <View>
-            <Text style={styles.headerName}>{therapist?.name}</Text>
+            <Text style={styles.headerName}>{therapist?.name ? capitalizeFirstLetter(therapist.name) || 'Annoymous' : capitalizeFirstLetter(patientName)}</Text>
             {/* <Text style={{ fontSize: 12 }}>Session Provider</Text> */}
             <View style={styles.onlineStatus}>
               {/* <View style={styles.onlineDot} /> */}
-              <Text style={styles.onlineText}>Session Provider</Text>
+              <Text style={styles.onlineText}>{therapist?.name ? "Session Provider" : "Session Client"}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -555,7 +477,7 @@ const Session = () => {
   const { session } = useCheckAuth()
   const senderId = session?.user?.id!
 
-  const { data, isLoading, error } = useGetById("user", { user_id: senderId }, "user_id, name, therapist_id, therapist(name, therapist_id, authority, license, specialization, summary), patients(*)", !!senderId)
+  const { data, isLoading, error } = useGetById("user", { user_id: senderId }, "therapist(name, therapist_id, authority, license, specialization, summary)", !!senderId, {})
 
   const therapist = data?.result[0]?.therapist;
 
@@ -716,152 +638,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
-
-  // // Modal Styles
-  // modalOverlay: {
-  //   flex: 1,
-  //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   paddingHorizontal: 20,
-  // },
-  // welcomeTipContainer: {
-  //   backgroundColor: '#fff',
-  //   borderRadius: 16,
-  //   padding: 20,
-  //   width: '100%',
-  //   maxWidth: 320,
-  // },
-  // tipHeader: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   marginBottom: 12,
-  // },
-  // tipTitle: {
-  //   fontSize: 18,
-  //   fontWeight: '600',
-  //   color: '#333',
-  //   marginLeft: 8,
-  // },
-  // tipText: {
-  //   fontSize: 14,
-  //   color: '#666',
-  //   lineHeight: 20,
-  //   marginBottom: 20,
-  // },
-  // tipButton: {
-  //   backgroundColor: '#4CAF50',
-  //   borderRadius: 8,
-  //   paddingVertical: 12,
-  //   alignItems: 'center',
-  // },
-  // tipButtonText: {
-  //   color: '#fff',
-  //   fontSize: 16,
-  //   fontWeight: '600',
-  // },
-
-  // // Bio Modal Styles
-  // bioModalOverlay: {
-  //   flex: 1,
-  //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  //   justifyContent: 'flex-end',
-  // },
-  // bioContainer: {
-  //   backgroundColor: '#fff',
-  //   borderTopLeftRadius: 20,
-  //   borderTopRightRadius: 20,
-  //   maxHeight: '85%',
-  // },
-  // bioHeader: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'flex-end',
-  //   paddingHorizontal: 20,
-  //   paddingTop: 20,
-  // },
-  // closeButton: {
-  //   width: 32,
-  //   height: 32,
-  //   borderRadius: 16,
-  //   backgroundColor: '#f5f5f5',
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  // },
-  // bioContent: {
-  //   paddingHorizontal: 20,
-  //   paddingBottom: 40,
-  // },
-  // therapistImage: {
-  //   width: 100,
-  //   height: 100,
-  //   borderRadius: 50,
-  //   alignSelf: 'center',
-  //   marginBottom: 16,
-  // },
-  // therapistName: {
-  //   fontSize: 24,
-  //   fontWeight: '700',
-  //   color: '#333',
-  //   textAlign: 'center',
-  //   marginBottom: 4,
-  // },
-  // therapistSpecialty: {
-  //   fontSize: 16,
-  //   color: '#666',
-  //   textAlign: 'center',
-  //   marginBottom: 24,
-  // },
-  // statsContainer: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-around',
-  //   marginBottom: 32,
-  //   paddingVertical: 20,
-  //   backgroundColor: '#f8f8f8',
-  //   borderRadius: 12,
-  // },
-  // statItem: {
-  //   alignItems: 'center',
-  // },
-  // statNumber: {
-  //   fontSize: 20,
-  //   fontWeight: '700',
-  //   color: '#333',
-  // },
-  // statLabel: {
-  //   fontSize: 12,
-  //   color: '#666',
-  //   marginTop: 4,
-  // },
-  // bioSectionTitle: {
-  //   fontSize: 18,
-  //   fontWeight: '600',
-  //   color: '#333',
-  //   marginBottom: 8,
-  //   marginTop: 20,
-  // },
-  // bioText: {
-  //   fontSize: 14,
-  //   color: '#666',
-  //   lineHeight: 20,
-  // },
-  // specializationsContainer: {
-  //   flexDirection: 'row',
-  //   flexWrap: 'wrap',
-  //   marginBottom: 16,
-  // },
-  // specializationTag: {
-  //   backgroundColor: '#e8f5e8',
-  //   borderRadius: 16,
-  //   paddingHorizontal: 12,
-  //   paddingVertical: 6,
-  //   marginRight: 8,
-  //   marginBottom: 8,
-  // },
-  // specializationText: {
-  //   fontSize: 12,
-  //   color: '#4CAF50',
-  //   fontWeight: '500',
-  // },
 
   // Call Screen Styles
   callContainer: {

@@ -13,6 +13,30 @@ import {
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 
+
+
+// useEffect(() => {
+//   // Subscribe to network state changes
+//   const unsubscribe = NetInfo.addEventListener(state => {
+//     if (!state.isConnected) {
+//       Toast.show({
+//         type: 'warning',
+//         text1: 'No Internet Connection',
+//         text2: 'Please check your network settings',
+//         autoHide: false,
+//       });
+//     } else {
+//       // Optionally hide the toast when connection is restored
+//       Toast.hide();
+//     }
+//   });
+
+//   // Cleanup subscription on unmount
+//   return () => {
+//     unsubscribe();
+//   };
+// }, []);
+
 SplashScreen.preventAutoHideAsync();
 const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const router = useRouter()
@@ -28,14 +52,13 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
     // navigation.navigate('SignIn');
   };
   const { session, loading } = useCheckAuth()
-  console.log("check Auth", session)
+  console.log(session, "session")
 
   useLayoutEffect(() => {
     if (loading) return;
     // SplashScreen.hideAsync();
 
     if (session?.user) {
-      console.log(session.user.user_metadata?.designation, " ✅ Only navigate if user exists")
       if (session.user.user_metadata?.designation === "therapist") {
         router.replace('/(tabs)/therapist-dashboard');
       } else {

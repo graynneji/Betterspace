@@ -35,7 +35,7 @@ interface TabItem {
 }
 
 // Mock user data
-const mockUser: User = {
+const User: User = {
     id: '1',
     name: 'Sarah Johnson',
     email: 'sarah.johnson@email.com',
@@ -55,7 +55,13 @@ const tabs: TabItem[] = [
 
 const More: React.FC = () => {
     const [activeTab, setActiveTab] = useState<string>('profile');
-    const [user, setUser] = useState<User>(mockUser);
+    const { session, loading: isPending } = useCheckAuth()
+    const initialUser = {
+        name: session?.user?.user_metadata?.full_name || User.name,
+        email: session?.user?.email || User.email,
+        phone: "+234 (80) 123-4567", // fallback phone
+    };
+    const [user, setUser] = useState(initialUser);
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
@@ -64,14 +70,24 @@ const More: React.FC = () => {
     });
     const [notifications, setNotifications] = useState<boolean>(true);
     const [biometricAuth, setBiometricAuth] = useState<boolean>(false);
+    // const updateAuthMutation = useUpdate("auth", session?.user?.id || "", ["user"])
+    // const updateUserMutation = useUpdate("user", session?.user?.id || "", ["user"])
 
     const { loading, logout } = useAuth()
-    const { session, loading: isPending } = useCheckAuth()
-    const handleSaveProfile = () => {
-        setIsEditing(false);
-        Alert.alert('Success', 'Profile updated successfully!');
-    };
 
+    // const handleSaveProfile = () => {
+    //     updateAuthMutation.mutate(user)
+    //     updateUserMutation.mutate(user)
+    //     setIsEditing(false);
+    //     Alert.alert('Success', 'Profile updated successfully!');
+    // }
+    const toggleEdit = () => {
+        if (isEditing) {
+            // Reset form back to original if cancelled
+            setUser(initialUser);
+        }
+        setIsEditing(!isEditing);
+    };
     const handleChangePassword = () => {
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             Alert.alert('Error', 'New passwords do not match');
@@ -96,32 +112,35 @@ const More: React.FC = () => {
                 return (
                     <View style={styles.tabContent}>
                         <View style={styles.profileHeader}>
-                            <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                            <Image source={{ uri: User.avatar }} style={styles.avatar} />
                             <View style={styles.profileInfo}>
                                 <Text style={styles.userName}>{session?.user?.user_metadata?.full_name}</Text>
                                 <Text style={styles.userRole}>{session?.user?.user_metadata?.designation === "patient" ? "Therapy Client" : "Therapy provider"}</Text>
                                 <Text style={styles.therapistInfo}>
-                                    Therapist: {user.therapistName}
+                                    {/* Therapist: {User.therapistName} */}
+                                    Betterspace LTD.
                                 </Text>
                             </View>
-                            <TouchableOpacity
+                            {/* <TouchableOpacity activeOpacity={1} 
                                 style={styles.editButton}
-                                onPress={() => setIsEditing(!isEditing)}
+                                onPress={toggleEdit}
+                                activeOpacity={1}
                             >
                                 <Text style={styles.editButtonText}>
                                     {isEditing ? 'Cancel' : 'Edit'}
                                 </Text>
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </View>
 
                         <View style={styles.formSection}>
                             <View style={styles.inputGroup}>
                                 <Text style={styles.label}>Full Name</Text>
                                 <TextInput
-                                    style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={session?.user?.user_metadata?.full_name}
+                                    style={[styles.input, styles.inputDisabled]}
+                                    value={user.name}
                                     onChangeText={(text) => setUser({ ...user, name: text })}
-                                    editable={isEditing}
+                                    editable={false}
+                                    selectTextOnFocus={false}
                                 />
                             </View>
 
@@ -129,7 +148,7 @@ const More: React.FC = () => {
                                 <Text style={styles.label}>Email Address</Text>
                                 <TextInput
                                     style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={session?.user?.user_metadata?.email}
+                                    value={user.email}
                                     onChangeText={(text) => setUser({ ...user, email: text })}
                                     editable={isEditing}
                                     keyboardType="email-address"
@@ -140,7 +159,7 @@ const More: React.FC = () => {
                                 <Text style={styles.label}>Phone Number</Text>
                                 <TextInput
                                     style={[styles.input, !isEditing && styles.inputDisabled]}
-                                    value={session?.user?.user_metadata?.phone || "+1 (555) 123-4567"}
+                                    value={user.phone}
                                     onChangeText={(text) => setUser({ ...user, phone: text })}
                                     editable={isEditing}
                                     keyboardType="phone-pad"
@@ -148,9 +167,9 @@ const More: React.FC = () => {
                             </View>
 
                             {isEditing && (
-                                <TouchableOpacity
+                                <TouchableOpacity activeOpacity={1}
                                     style={styles.saveButton}
-                                    onPress={handleSaveProfile}
+                                // onPress={handleSaveProfile}
                                 >
                                     <Text style={styles.saveButtonText}>Save Changes</Text>
                                 </TouchableOpacity>
@@ -212,7 +231,7 @@ const More: React.FC = () => {
                                 />
                             </View>
 
-                            <TouchableOpacity
+                            <TouchableOpacity activeOpacity={1}
                                 style={styles.changePasswordButton}
                                 onPress={handleChangePassword}
                             >
@@ -246,7 +265,7 @@ const More: React.FC = () => {
                     <View style={styles.tabContent}>
                         <View style={styles.sessionStats}>
                             <View style={styles.statCard}>
-                                <Text style={styles.statNumber}>{user.sessionsCompleted}</Text>
+                                <Text style={styles.statNumber}>{User.sessionsCompleted}</Text>
                                 <Text style={styles.statLabel}>Sessions Completed</Text>
                             </View>
                             <View style={styles.statCard}>
@@ -257,11 +276,11 @@ const More: React.FC = () => {
 
                         <View style={styles.nextSession}>
                             <Text style={styles.nextSessionTitle}>Next Session</Text>
-                            <Text style={styles.nextSessionDate}>{user.nextSession}</Text>
+                            <Text style={styles.nextSessionDate}>{User.nextSession}</Text>
                             <Text style={styles.nextSessionTherapist}>
-                                with {user.therapistName}
+                                with {User.therapistName}
                             </Text>
-                            <TouchableOpacity style={styles.rescheduleButton}>
+                            <TouchableOpacity activeOpacity={1} style={styles.rescheduleButton}>
                                 <Text style={styles.rescheduleButtonText}>Reschedule</Text>
                             </TouchableOpacity>
                         </View>
@@ -278,7 +297,7 @@ const More: React.FC = () => {
                                         <Text style={styles.sessionType}>Individual Therapy</Text>
                                         <Text style={styles.sessionStatus}>Completed</Text>
                                     </View>
-                                    <TouchableOpacity style={styles.sessionAction}>
+                                    <TouchableOpacity activeOpacity={1} style={styles.sessionAction}>
                                         <Text style={styles.sessionActionText}>View Notes</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -308,7 +327,7 @@ const More: React.FC = () => {
                                 />
                             </View>
 
-                            <TouchableOpacity style={styles.settingItem}>
+                            <TouchableOpacity activeOpacity={1} style={styles.settingItem}>
                                 <View>
                                     <Text style={styles.settingTitle}>Language</Text>
                                     <Text style={styles.settingSubtitle}>English</Text>
@@ -316,7 +335,7 @@ const More: React.FC = () => {
                                 <Text style={styles.settingArrow}>›</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.settingItem}>
+                            <TouchableOpacity activeOpacity={1} style={styles.settingItem}>
                                 <View>
                                     <Text style={styles.settingTitle}>Privacy Policy</Text>
                                     <Text style={styles.settingSubtitle}>
@@ -326,7 +345,7 @@ const More: React.FC = () => {
                                 <Text style={styles.settingArrow}>›</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={styles.settingItem}>
+                            <TouchableOpacity activeOpacity={1} style={styles.settingItem}>
                                 <View>
                                     <Text style={styles.settingTitle}>Terms of Service</Text>
                                     <Text style={styles.settingSubtitle}>
@@ -336,7 +355,7 @@ const More: React.FC = () => {
                                 <Text style={styles.settingArrow}>›</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style={[styles.settingItem, styles.dangerItem]} onPress={signOut}>
+                            <TouchableOpacity activeOpacity={1} style={[styles.settingItem, styles.dangerItem]} onPress={signOut}>
                                 <View>
                                     <Text style={[styles.settingTitle, styles.dangerText]}>
                                         {loading ? "Signing Out..." : "Sign Out"}
@@ -365,7 +384,7 @@ const More: React.FC = () => {
             <View style={styles.tabContainer}>
                 <View style={styles.tabBar}>
                     {tabs.map((tab) => (
-                        <TouchableOpacity
+                        <TouchableOpacity activeOpacity={1}
                             key={tab.id}
                             style={[
                                 styles.tab,

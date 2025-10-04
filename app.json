@@ -4,7 +4,7 @@
     "slug": "Betterspace",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/splashIcon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "betterspace",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -18,7 +18,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -30,7 +32,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/splashIcon.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#4e7560"
       },
       "splash": {
@@ -38,12 +40,21 @@
         "resizeMode": "contain",
         "backgroundColor": "#4e7560"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.graynneji.Betterspace"
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bbc96568-93ec-46a0-95b6-c8380b54bf25"
+      }
+    }
   }
 }

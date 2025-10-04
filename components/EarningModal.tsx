@@ -1,9 +1,10 @@
+
+
 import { TherapistData } from "@/types";
 import React, { Dispatch, SetStateAction, useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import { TherapistData } from "./TherapistDashboard";
-// Bank Details interface
+
 interface BankDetails {
     id?: string;
     bankName: string;
@@ -14,7 +15,6 @@ interface BankDetails {
     isDefault: boolean;
 }
 
-// Payout Request interface
 interface PayoutRequest {
     id: string;
     amount: number;
@@ -31,8 +31,14 @@ interface EarningProps {
     setActiveEarningsTab: Dispatch<SetStateAction<'overview' | 'banking' | 'payout'>>
     therapistData: TherapistData | undefined
 }
-const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEarningsModalVisible, activeEarningsTab, setActiveEarningsTab, therapistData }) => {
-    // Bank details state
+
+const EarningModal: React.FC<EarningProps> = ({
+    isEarningsModalVisible,
+    setIsEarningsModalVisible,
+    activeEarningsTab,
+    setActiveEarningsTab,
+    therapistData
+}) => {
     const [bankDetails, setBankDetails] = useState<BankDetails[]>([]);
     const [newBankDetails, setNewBankDetails] = useState<BankDetails>({
         bankName: '',
@@ -43,11 +49,10 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
         isDefault: false,
     });
 
-    // Payout state
     const [payoutAmount, setPayoutAmount] = useState<string>('');
     const [selectedBankForPayout, setSelectedBankForPayout] = useState<string>('');
     const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
-    // Add bank account
+
     const addBankAccount = () => {
         if (!newBankDetails.bankName.trim() || !newBankDetails.accountName.trim() ||
             !newBankDetails.accountNumber.trim() || !newBankDetails.routingNumber.trim()) {
@@ -61,7 +66,6 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
             isDefault: bankDetails.length === 0 || newBankDetails.isDefault,
         };
 
-        // If this is set as default, update other accounts
         const updatedBankDetails = bankDetails.map(bank => ({
             ...bank,
             isDefault: newBankDetails.isDefault ? false : bank.isDefault
@@ -80,7 +84,6 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
         Alert.alert('Success', 'Bank account added successfully');
     };
 
-    // Request payout
     const requestPayout = () => {
         const amount = parseFloat(payoutAmount);
         const availableBalance = therapistData?.result[0]?.balance || 0;
@@ -109,7 +112,7 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
             requestDate: new Date().toISOString().split('T')[0],
             status: 'pending',
             bankDetails: selectedBank,
-            estimatedArrival: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+            estimatedArrival: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         };
 
         setPayoutRequests([newPayout, ...payoutRequests]);
@@ -119,114 +122,109 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
         Alert.alert('Success', 'Payout request submitted successfully. You will receive an email confirmation shortly.');
     };
 
-    // Get payout status color
     const getPayoutStatusColor = (status: PayoutRequest['status']) => {
         switch (status) {
-            case 'completed':
-                return '#28a745';
-            case 'processing':
-                return '#007AFF';
-            case 'pending':
-                return '#ffc107';
-            case 'failed':
-                return '#dc3545';
-            default:
-                return '#6c757d';
+            case 'completed': return '#10B981';
+            case 'processing': return '#3B82F6';
+            case 'pending': return '#F59E0B';
+            case 'failed': return '#EF4444';
+            default: return '#6B7280';
         }
     };
+
     return (
         <Modal
             visible={isEarningsModalVisible}
             animationType="slide"
             presentationStyle="pageSheet"
         >
-            <SafeAreaView style={styles.modalContainer}>
-                <View style={styles.modalHeader}>
+            <SafeAreaView style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>Earnings</Text>
                     <TouchableOpacity
                         onPress={() => setIsEarningsModalVisible(false)}
-                        style={styles.cancelButton}
+                        style={styles.closeButton}
                     >
-                        <Text style={styles.cancelButtonText}>Close</Text>
+                        <Text style={styles.closeButtonText}>✕</Text>
                     </TouchableOpacity>
-                    <Text style={styles.modalTitle}>Earnings & Payouts</Text>
-                    <View style={{ width: 60 }} />
                 </View>
 
                 {/* Tab Navigation */}
                 <View style={styles.tabContainer}>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeEarningsTab === 'overview' && styles.tabButtonActive]}
-                        activeOpacity={1}
-                        onPress={() => setActiveEarningsTab('overview')}
-                    >
-                        <Text style={[styles.tabButtonText, activeEarningsTab === 'overview' && styles.tabButtonTextActive]}>
-                            Overview
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeEarningsTab === 'banking' && styles.tabButtonActive]}
-                        activeOpacity={1}
-                        onPress={() => setActiveEarningsTab('banking')}
-                    >
-                        <Text style={[styles.tabButtonText, activeEarningsTab === 'banking' && styles.tabButtonTextActive]}>
-                            Banking
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeEarningsTab === 'payout' && styles.tabButtonActive]}
-                        activeOpacity={1}
-                        onPress={() => setActiveEarningsTab('payout')}
-                    >
-                        <Text style={[styles.tabButtonText, activeEarningsTab === 'payout' && styles.tabButtonTextActive]}>
-                            Payout
-                        </Text>
-                    </TouchableOpacity>
+                    {(['overview', 'banking', 'payout'] as const).map((tab) => (
+                        <TouchableOpacity
+                            key={tab}
+                            style={[styles.tab, activeEarningsTab === tab && styles.tabActive]}
+                            onPress={() => setActiveEarningsTab(tab)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.tabText, activeEarningsTab === tab && styles.tabTextActive]}>
+                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
-                <ScrollView style={styles.modalContent}>
+                <ScrollView
+                    style={styles.content}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.contentContainer}
+                >
                     {/* Overview Tab */}
                     {activeEarningsTab === 'overview' && (
                         <View>
-                            {/* Earnings Summary Cards */}
-                            <View style={styles.earningsGrid}>
-                                <View style={[styles.earningsCard, styles.balanceCard]}>
-                                    <Text style={styles.earningsCardLabel}>Available Balance</Text>
-                                    <Text style={styles.earningsCardValue}>
-                                        ${(therapistData?.result[0]?.balance || 0).toFixed(2)}
-                                    </Text>
-                                </View>
-                                <View style={[styles.earningsCard, styles.pendingCard]}>
-                                    <Text style={styles.earningsCardLabel}>Pending</Text>
-                                    <Text style={styles.earningsCardValue}>
-                                        ${(therapistData?.result[0]?.pending || 0).toFixed(2)}
-                                    </Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.earningsCard}>
-                                <Text style={styles.earningsCardLabel}>Total Earnings</Text>
-                                <Text style={[styles.earningsCardValue, styles.totalEarnings]}>
-                                    ${(therapistData?.result[0]?.total_earning || 0).toFixed(2)}
+                            {/* Balance Card */}
+                            <View style={styles.balanceCard}>
+                                <Text style={styles.balanceLabel}>Total Balance</Text>
+                                <Text style={styles.balanceAmount}>
+                                    ${(therapistData?.result[0]?.balance || 0).toFixed(2)}
                                 </Text>
+                                <View style={styles.balanceRow}>
+                                    <View style={styles.balanceItem}>
+                                        <Text style={styles.balanceSubLabel}>Pending</Text>
+                                        <Text style={styles.balanceSubAmount}>
+                                            ${(therapistData?.result[0]?.pending || 0).toFixed(2)}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.balanceDivider} />
+                                    <View style={styles.balanceItem}>
+                                        <Text style={styles.balanceSubLabel}>Total Earned</Text>
+                                        <Text style={styles.balanceSubAmount}>
+                                            ${(therapistData?.result[0]?.total_earning || 0).toFixed(2)}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
 
                             {/* Recent Payouts */}
-                            <View style={styles.sectionCard}>
-                                <Text style={styles.sectionTitle}>Recent Payouts</Text>
+                            <View style={styles.section}>
+                                <Text style={styles.sectionTitle}>Recent Activity</Text>
                                 {payoutRequests.length === 0 ? (
-                                    <Text style={styles.emptyStateText}>No payout requests yet</Text>
+                                    <View style={styles.emptyState}>
+                                        <Text style={styles.emptyStateIcon}>💸</Text>
+                                        <Text style={styles.emptyStateText}>No transactions yet</Text>
+                                        <Text style={styles.emptyStateSubtext}>Your payout history will appear here</Text>
+                                    </View>
                                 ) : (
                                     payoutRequests.slice(0, 5).map(payout => (
-                                        <View key={payout.id} style={styles.payoutItem}>
-                                            <View style={styles.payoutItemLeft}>
-                                                <Text style={styles.payoutAmount}>${payout.amount.toFixed(2)}</Text>
-                                                <Text style={styles.payoutDate}>{new Date(payout.requestDate).toLocaleDateString()}</Text>
+                                        <View key={payout.id} style={styles.transactionItem}>
+                                            <View style={styles.transactionLeft}>
+                                                <View style={[styles.transactionIcon, { backgroundColor: getPayoutStatusColor(payout.status) + '20' }]}>
+                                                    <Text style={styles.transactionIconText}>💰</Text>
+                                                </View>
+                                                <View style={styles.transactionInfo}>
+                                                    <Text style={styles.transactionTitle}>Payout</Text>
+                                                    <Text style={styles.transactionDate}>
+                                                        {new Date(payout.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                    </Text>
+                                                </View>
                                             </View>
-                                            <View style={[
-                                                styles.payoutStatusBadge,
-                                                { backgroundColor: getPayoutStatusColor(payout.status) }
-                                            ]}>
-                                                <Text style={styles.payoutStatusText}>{payout.status}</Text>
+                                            <View style={styles.transactionRight}>
+                                                <Text style={styles.transactionAmount}>-${payout.amount.toFixed(2)}</Text>
+                                                <View style={[styles.statusBadge, { backgroundColor: getPayoutStatusColor(payout.status) }]}>
+                                                    <Text style={styles.statusText}>{payout.status}</Text>
+                                                </View>
                                             </View>
                                         </View>
                                     ))
@@ -238,83 +236,106 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                     {/* Banking Tab */}
                     {activeEarningsTab === 'banking' && (
                         <View>
-                            {/* Add New Bank Account */}
-                            <View style={styles.sectionCard}>
-                                <Text style={styles.sectionTitle}>Add Bank Account</Text>
+                            {/* Saved Accounts */}
+                            <View style={styles.section}>
+                                <Text style={styles.sectionTitle}>Bank Accounts</Text>
+                                {bankDetails.length === 0 ? (
+                                    <View style={styles.emptyState}>
+                                        <Text style={styles.emptyStateIcon}>🏦</Text>
+                                        <Text style={styles.emptyStateText}>No accounts added</Text>
+                                        <Text style={styles.emptyStateSubtext}>Add a bank account to receive payouts</Text>
+                                    </View>
+                                ) : (
+                                    bankDetails.map(bank => (
+                                        <View key={bank.id} style={styles.bankCard}>
+                                            <View style={styles.bankCardHeader}>
+                                                <View style={styles.bankIcon}>
+                                                    <Text style={styles.bankIconText}>🏦</Text>
+                                                </View>
+                                                {bank.isDefault && (
+                                                    <View style={styles.defaultChip}>
+                                                        <Text style={styles.defaultChipText}>Default</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            <Text style={styles.bankCardName}>{bank.bankName}</Text>
+                                            <Text style={styles.bankCardNumber}>•••• •••• •••• {bank.accountNumber.slice(-4)}</Text>
+                                            <Text style={styles.bankCardHolder}>{bank.accountName}</Text>
+                                            <Text style={styles.bankCardType}>{bank.accountType}</Text>
+                                        </View>
+                                    ))
+                                )}
+                            </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Bank Name *</Text>
+                            {/* Add Bank Form */}
+                            <View style={styles.section}>
+                                <Text style={styles.sectionTitle}>Add New Account</Text>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Bank Name</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={styles.input}
                                         value={newBankDetails.bankName}
                                         onChangeText={(text) => setNewBankDetails(prev => ({ ...prev, bankName: text }))}
-                                        placeholder="e.g., Chase Bank"
+                                        placeholder="Chase, Bank of America, etc."
+                                        placeholderTextColor="#9CA3AF"
                                     />
                                 </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Account Holder Name *</Text>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Account Holder Name</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={styles.input}
                                         value={newBankDetails.accountName}
                                         onChangeText={(text) => setNewBankDetails(prev => ({ ...prev, accountName: text }))}
-                                        placeholder="Full name as on bank account"
+                                        placeholder="Full name on account"
+                                        placeholderTextColor="#9CA3AF"
                                     />
                                 </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Account Number *</Text>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Account Number</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={styles.input}
                                         value={newBankDetails.accountNumber}
                                         onChangeText={(text) => setNewBankDetails(prev => ({ ...prev, accountNumber: text }))}
-                                        placeholder="Account number"
+                                        placeholder="Enter account number"
+                                        placeholderTextColor="#9CA3AF"
                                         keyboardType="numeric"
                                         secureTextEntry
                                     />
                                 </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Routing Number *</Text>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Routing Number</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={styles.input}
                                         value={newBankDetails.routingNumber}
                                         onChangeText={(text) => setNewBankDetails(prev => ({ ...prev, routingNumber: text }))}
                                         placeholder="9-digit routing number"
+                                        placeholderTextColor="#9CA3AF"
                                         keyboardType="numeric"
                                     />
                                 </View>
 
-                                <View style={styles.inputGroup}>
+                                <View style={styles.inputContainer}>
                                     <Text style={styles.inputLabel}>Account Type</Text>
-                                    <View style={styles.accountTypeContainer}>
+                                    <View style={styles.accountTypeRow}>
                                         <TouchableOpacity
-                                            style={[
-                                                styles.accountTypeButton,
-                                                newBankDetails.accountType === 'checking' && styles.accountTypeButtonSelected
-                                            ]}
-                                            activeOpacity={1}
+                                            style={[styles.accountTypeChip, newBankDetails.accountType === 'checking' && styles.accountTypeChipActive]}
                                             onPress={() => setNewBankDetails(prev => ({ ...prev, accountType: 'checking' }))}
+                                            activeOpacity={0.7}
                                         >
-                                            <Text style={[
-                                                styles.accountTypeButtonText,
-                                                newBankDetails.accountType === 'checking' && styles.accountTypeButtonTextSelected
-                                            ]}>
+                                            <Text style={[styles.accountTypeText, newBankDetails.accountType === 'checking' && styles.accountTypeTextActive]}>
                                                 Checking
                                             </Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
-                                            style={[
-                                                styles.accountTypeButton,
-                                                newBankDetails.accountType === 'savings' && styles.accountTypeButtonSelected
-                                            ]}
-                                            activeOpacity={1}
+                                            style={[styles.accountTypeChip, newBankDetails.accountType === 'savings' && styles.accountTypeChipActive]}
                                             onPress={() => setNewBankDetails(prev => ({ ...prev, accountType: 'savings' }))}
+                                            activeOpacity={0.7}
                                         >
-                                            <Text style={[
-                                                styles.accountTypeButtonText,
-                                                newBankDetails.accountType === 'savings' && styles.accountTypeButtonTextSelected
-                                            ]}>
+                                            <Text style={[styles.accountTypeText, newBankDetails.accountType === 'savings' && styles.accountTypeTextActive]}>
                                                 Savings
                                             </Text>
                                         </TouchableOpacity>
@@ -322,49 +343,23 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                                 </View>
 
                                 <TouchableOpacity
-                                    style={styles.checkboxContainer}
+                                    style={styles.checkboxRow}
                                     onPress={() => setNewBankDetails(prev => ({ ...prev, isDefault: !prev.isDefault }))}
+                                    activeOpacity={0.7}
                                 >
-                                    <View style={[
-                                        styles.checkbox,
-                                        newBankDetails.isDefault && styles.checkboxChecked
-                                    ]}>
+                                    <View style={[styles.checkbox, newBankDetails.isDefault && styles.checkboxChecked]}>
                                         {newBankDetails.isDefault && <Text style={styles.checkmark}>✓</Text>}
                                     </View>
                                     <Text style={styles.checkboxLabel}>Set as default account</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={styles.addBankButton}
+                                    style={styles.primaryButton}
                                     onPress={addBankAccount}
+                                    activeOpacity={0.8}
                                 >
-                                    <Text style={styles.addBankButtonText}>Add Bank Account</Text>
+                                    <Text style={styles.primaryButtonText}>Add Bank Account</Text>
                                 </TouchableOpacity>
-                            </View>
-
-                            {/* Saved Bank Accounts */}
-                            <View style={styles.sectionCard}>
-                                <Text style={styles.sectionTitle}>Saved Accounts ({bankDetails.length})</Text>
-                                {bankDetails.length === 0 ? (
-                                    <Text style={styles.emptyStateText}>No bank accounts added yet</Text>
-                                ) : (
-                                    bankDetails.map(bank => (
-                                        <View key={bank.id} style={styles.bankAccountItem}>
-                                            <View style={styles.bankAccountInfo}>
-                                                <Text style={styles.bankName}>{bank.bankName}</Text>
-                                                <Text style={styles.bankAccountDetails}>
-                                                    {bank.accountType} •••• {bank.accountNumber.slice(-4)}
-                                                </Text>
-                                                <Text style={styles.bankAccountName}>{bank.accountName}</Text>
-                                            </View>
-                                            {bank.isDefault && (
-                                                <View style={styles.defaultBadge}>
-                                                    <Text style={styles.defaultBadgeText}>Default</Text>
-                                                </View>
-                                            )}
-                                        </View>
-                                    ))
-                                )}
                             </View>
                         </View>
                     )}
@@ -372,105 +367,124 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
                     {/* Payout Tab */}
                     {activeEarningsTab === 'payout' && (
                         <View>
-                            {/* Request Payout */}
-                            <View style={styles.sectionCard}>
-                                <Text style={styles.sectionTitle}>Request Payout</Text>
-                                <Text style={styles.availableBalance}>
-                                    Available: ${(therapistData?.result[0]?.balance || 0).toFixed(2)}
-                                </Text>
+                            {/* Payout Form */}
+                            <View style={styles.section}>
+                                <View style={styles.payoutHeader}>
+                                    <Text style={styles.sectionTitle}>Request Payout</Text>
+                                    <View style={styles.availableChip}>
+                                        <Text style={styles.availableText}>
+                                            ${(therapistData?.result[0]?.balance || 0).toFixed(2)} available
+                                        </Text>
+                                    </View>
+                                </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Payout Amount *</Text>
+                                <View style={styles.amountInputContainer}>
+                                    <Text style={styles.currencySymbol}>$</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={styles.amountInput}
                                         value={payoutAmount}
                                         onChangeText={setPayoutAmount}
                                         placeholder="0.00"
+                                        placeholderTextColor="#D1D5DB"
                                         keyboardType="decimal-pad"
                                     />
                                 </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Select Bank Account *</Text>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Select Account</Text>
                                     {bankDetails.length === 0 ? (
-                                        <Text style={styles.noBankAccountText}>
-                                            No bank accounts available. Add one in the Banking tab.
-                                        </Text>
+                                        <View style={styles.warningBox}>
+                                            <Text style={styles.warningText}>⚠️ No bank accounts available</Text>
+                                            <Text style={styles.warningSubtext}>Add one in the Banking tab</Text>
+                                        </View>
                                     ) : (
-                                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                            <View style={styles.bankSelectionContainer}>
-                                                {bankDetails.map(bank => (
-                                                    <TouchableOpacity
-                                                        key={bank.id}
-                                                        style={[
-                                                            styles.bankSelectionItem,
-                                                            selectedBankForPayout === bank.id && styles.bankSelectionItemSelected
-                                                        ]}
-                                                        onPress={() => setSelectedBankForPayout(bank.id!)}
-                                                    >
-                                                        <Text style={[
-                                                            styles.bankSelectionName,
-                                                            selectedBankForPayout === bank.id && styles.bankSelectionNameSelected
-                                                        ]}>
-                                                            {bank.bankName}
-                                                        </Text>
-                                                        <Text style={[
-                                                            styles.bankSelectionDetails,
-                                                            selectedBankForPayout === bank.id && styles.bankSelectionDetailsSelected
-                                                        ]}>
-                                                            •••• {bank.accountNumber.slice(-4)}
-                                                        </Text>
-                                                    </TouchableOpacity>
-                                                ))}
-                                            </View>
+                                        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bankScroll}>
+                                            {bankDetails.map(bank => (
+                                                <TouchableOpacity
+                                                    key={bank.id}
+                                                    style={[
+                                                        styles.bankSelectCard,
+                                                        selectedBankForPayout === bank.id && styles.bankSelectCardActive
+                                                    ]}
+                                                    onPress={() => setSelectedBankForPayout(bank.id!)}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={styles.bankSelectIcon}>🏦</Text>
+                                                    <Text style={[
+                                                        styles.bankSelectName,
+                                                        selectedBankForPayout === bank.id && styles.bankSelectNameActive
+                                                    ]}>
+                                                        {bank.bankName}
+                                                    </Text>
+                                                    <Text style={[
+                                                        styles.bankSelectNumber,
+                                                        selectedBankForPayout === bank.id && styles.bankSelectNumberActive
+                                                    ]}>
+                                                        •••• {bank.accountNumber.slice(-4)}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
                                         </ScrollView>
                                     )}
                                 </View>
 
                                 <TouchableOpacity
                                     style={[
-                                        styles.requestPayoutButton,
-                                        (!payoutAmount || !selectedBankForPayout || bankDetails.length === 0) && styles.requestPayoutButtonDisabled
+                                        styles.primaryButton,
+                                        (!payoutAmount || !selectedBankForPayout || bankDetails.length === 0) && styles.primaryButtonDisabled
                                     ]}
                                     onPress={requestPayout}
                                     disabled={!payoutAmount || !selectedBankForPayout || bankDetails.length === 0}
+                                    activeOpacity={0.8}
                                 >
-                                    <Text style={styles.requestPayoutButtonText}>Request Payout</Text>
+                                    <Text style={styles.primaryButtonText}>Request Payout</Text>
                                 </TouchableOpacity>
 
-                                <Text style={styles.payoutNote}>
-                                    Payouts typically arrive within 1-3 business days. A confirmation email will be sent once processed.
+                                <Text style={styles.infoText}>
+                                    ⏱️ Payouts typically arrive within 1-3 business days
                                 </Text>
                             </View>
 
                             {/* Payout History */}
-                            <View style={styles.sectionCard}>
+                            <View style={styles.section}>
                                 <Text style={styles.sectionTitle}>Payout History</Text>
                                 {payoutRequests.length === 0 ? (
-                                    <Text style={styles.emptyStateText}>No payout requests yet</Text>
+                                    <View style={styles.emptyState}>
+                                        <Text style={styles.emptyStateIcon}>📋</Text>
+                                        <Text style={styles.emptyStateText}>No payout history</Text>
+                                        <Text style={styles.emptyStateSubtext}>Request your first payout above</Text>
+                                    </View>
                                 ) : (
                                     payoutRequests.map(payout => (
-                                        <View key={payout.id} style={styles.payoutHistoryItem}>
-                                            <View style={styles.payoutHistoryLeft}>
-                                                <Text style={styles.payoutHistoryAmount}>${payout.amount.toFixed(2)}</Text>
-                                                <Text style={styles.payoutHistoryDate}>
-                                                    {new Date(payout.requestDate).toLocaleDateString()}
+                                        <View key={payout.id} style={styles.payoutHistoryCard}>
+                                            <View style={styles.payoutHistoryHeader}>
+                                                <Text style={styles.payoutHistoryAmount}>
+                                                    ${payout.amount.toFixed(2)}
                                                 </Text>
-                                                <Text style={styles.payoutHistoryBank}>
+                                                <View style={[styles.statusBadge, { backgroundColor: getPayoutStatusColor(payout.status) }]}>
+                                                    <Text style={styles.statusText}>{payout.status}</Text>
+                                                </View>
+                                            </View>
+                                            <View style={styles.payoutHistoryDetails}>
+                                                <Text style={styles.payoutHistoryLabel}>Bank Account</Text>
+                                                <Text style={styles.payoutHistoryValue}>
                                                     {payout.bankDetails.bankName} •••• {payout.bankDetails.accountNumber.slice(-4)}
                                                 </Text>
-                                                {payout.estimatedArrival && payout.status === 'processing' && (
-                                                    <Text style={styles.payoutHistoryEta}>
-                                                        Est. arrival: {new Date(payout.estimatedArrival).toLocaleDateString()}
+                                            </View>
+                                            <View style={styles.payoutHistoryDetails}>
+                                                <Text style={styles.payoutHistoryLabel}>Requested</Text>
+                                                <Text style={styles.payoutHistoryValue}>
+                                                    {new Date(payout.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </Text>
+                                            </View>
+                                            {payout.estimatedArrival && payout.status === 'processing' && (
+                                                <View style={styles.payoutHistoryDetails}>
+                                                    <Text style={styles.payoutHistoryLabel}>Est. Arrival</Text>
+                                                    <Text style={[styles.payoutHistoryValue, { color: '#3B82F6' }]}>
+                                                        {new Date(payout.estimatedArrival).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                     </Text>
-                                                )}
-                                            </View>
-                                            <View style={[
-                                                styles.payoutHistoryStatusBadge,
-                                                { backgroundColor: getPayoutStatusColor(payout.status) }
-                                            ]}>
-                                                <Text style={styles.payoutHistoryStatusText}>{payout.status}</Text>
-                                            </View>
+                                                </View>
+                                            )}
                                         </View>
                                     ))
                                 )}
@@ -482,423 +496,497 @@ const EarningModal: React.FC<EarningProps> = ({ isEarningsModalVisible, setIsEar
         </Modal>
     );
 };
-const styles = StyleSheet.create({
 
-    modalContainer: {
+const styles = StyleSheet.create({
+    container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#F9FAFB',
     },
-    modalHeader: {
-        // backgroundColor: 'white',
+    header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
+        paddingHorizontal: 20,
         paddingVertical: 16,
+        backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: '#F3F4F6',
     },
-    modalTitle: {
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#111827',
+        letterSpacing: -0.5,
+    },
+    closeButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    closeButtonText: {
         fontSize: 18,
+        color: '#6B7280',
         fontWeight: '600',
-        color: '#2d4150',
     },
-    cancelButton: {
-        padding: 4,
-    },
-    cancelButtonText: {
-        color: '#6b7280',
-        fontSize: 16,
-    },
-    modalContent: {
-        flex: 1,
-        paddingHorizontal: 16,
-        paddingTop: 16,
-    },
-    // Tab Styles
     tabContainer: {
         flexDirection: 'row',
-        // backgroundColor: '#fff',
-        marginHorizontal: 16,
-        borderRadius: 8,
-        padding: 4,
-        marginTop: 16,
-    },
-    tabButton: {
-        flex: 1,
-        paddingVertical: 8,
+        backgroundColor: '#FFFFFF',
         paddingHorizontal: 16,
-        borderRadius: 6,
+        paddingTop: 12,
+        gap: 8,
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 10,
         alignItems: 'center',
+        borderBottomWidth: 2,
+        borderBottomColor: 'transparent',
     },
-    tabButtonActive: {
-        backgroundColor: '#4CAF50',
+    tabActive: {
+        borderBottomColor: '#6366F1',
     },
-    tabButtonText: {
-        fontSize: 14,
-        color: '#6c757d',
-        fontWeight: '500',
-    },
-    tabButtonTextActive: {
-        color: '#fff',
+    tabText: {
+        fontSize: 15,
         fontWeight: '600',
+        color: '#9CA3AF',
     },
-    // Earnings Overview Styles
-    earningsGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 16,
+    tabTextActive: {
+        color: '#6366F1',
     },
-    earningsCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 4,
-        // elevation: 3,
-        borderColor: "#DEE2E6",
-        borderWidth: 1,
-        alignItems: 'center',
+    content: {
+        flex: 1,
+    },
+    contentContainer: {
+        padding: 20,
+        paddingBottom: 40,
     },
     balanceCard: {
-        flex: 0.48,
-        backgroundColor: '#e8f5e8',
-        borderColor: "#DEE2E6",
-        borderWidth: 1,
+        backgroundColor: '#6366F1',
+        borderRadius: 20,
+        padding: 24,
+        marginBottom: 24,
     },
-    pendingCard: {
-        flex: 0.48,
-        backgroundColor: '#fff3cd',
-        borderColor: "#DEE2E6",
-        borderWidth: 1,
-    },
-    earningsCardLabel: {
-        fontSize: 12,
-        color: '#6c757d',
-        marginBottom: 8,
-        textAlign: 'center',
-        textTransform: 'uppercase',
-        fontWeight: '600',
-    },
-    earningsCardValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#2d4150',
-        textAlign: 'center',
-    },
-    totalEarnings: {
-        fontSize: 32,
-        color: '#4CAF50',
-    },
-    sectionCard: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 4,
-        // elevation: 3,
-        borderColor: "#DEE2E6",
-        borderWidth: 1,
-    },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#2d4150',
-        marginBottom: 16,
-    },
-    emptyStateText: {
-        textAlign: 'center',
-        color: '#6c757d',
+    balanceLabel: {
         fontSize: 14,
-        fontStyle: 'italic',
-        marginTop: 16,
+        color: '#E0E7FF',
+        fontWeight: '500',
+        marginBottom: 8,
     },
-    // Payout Item Styles
-    payoutItem: {
+    balanceAmount: {
+        fontSize: 40,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        marginBottom: 24,
+        letterSpacing: -1,
+    },
+    balanceRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f3f4',
     },
-    payoutItemLeft: {
+    balanceItem: {
         flex: 1,
     },
-    payoutAmount: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#2d4150',
+    balanceSubLabel: {
+        fontSize: 12,
+        color: '#C7D2FE',
+        fontWeight: '500',
         marginBottom: 4,
     },
-    payoutDate: {
-        fontSize: 12,
-        color: '#6c757d',
+    balanceSubAmount: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#FFFFFF',
     },
-    payoutStatusBadge: {
-        paddingHorizontal: 8,
+    balanceDivider: {
+        width: 1,
+        height: 40,
+        backgroundColor: '#818CF8',
+        marginHorizontal: 16,
+    },
+    section: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 16,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 48,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+    },
+    emptyStateIcon: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    emptyStateText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+        marginBottom: 4,
+    },
+    emptyStateSubtext: {
+        fontSize: 14,
+        color: '#9CA3AF',
+    },
+    transactionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 8,
+    },
+    transactionLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    transactionIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    transactionIconText: {
+        fontSize: 20,
+    },
+    transactionInfo: {
+        flex: 1,
+    },
+    transactionTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 2,
+    },
+    transactionDate: {
+        fontSize: 13,
+        color: '#9CA3AF',
+    },
+    transactionRight: {
+        alignItems: 'flex-end',
+    },
+    transactionAmount: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 4,
+    },
+    statusBadge: {
+        paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 12,
     },
-    payoutStatusText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: '600',
+    statusText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        textTransform: 'capitalize',
+    },
+    bankCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    bankCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    bankIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: '#F3F4F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    bankIconText: {
+        fontSize: 20,
+    },
+    defaultChip: {
+        backgroundColor: '#DBEAFE',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    defaultChipText: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#1E40AF',
         textTransform: 'uppercase',
     },
-    // Input Styles
-    inputGroup: {
-        marginBottom: 16,
+    bankCardName: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#111827',
+        marginBottom: 8,
+    },
+    bankCardNumber: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#6B7280',
+        marginBottom: 12,
+        letterSpacing: 1,
+    },
+    bankCardHolder: {
+        fontSize: 13,
+        color: '#9CA3AF',
+        marginBottom: 4,
+    },
+    bankCardType: {
+        fontSize: 12,
+        color: '#9CA3AF',
+        textTransform: 'capitalize',
+    },
+    inputContainer: {
+        marginBottom: 20,
     },
     inputLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#2d4150',
+        color: '#374151',
         marginBottom: 8,
     },
-    textInput: {
+    input: {
+        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderColor: '#dee2e6',
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        backgroundColor: '#f8f9fa',
+        borderColor: '#E5E7EB',
+        borderRadius: 12,
+        padding: 14,
+        fontSize: 15,
+        color: '#111827',
     },
-    // Account Type Styles
-    accountTypeContainer: {
+    accountTypeRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        gap: 12,
     },
-    accountTypeButton: {
-        flex: 0.48,
+    accountTypeChip: {
+        flex: 1,
         paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 8,
-        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        backgroundColor: '#F9FAFB',
         borderWidth: 1,
-        borderColor: '#dee2e6',
+        borderColor: '#E5E7EB',
         alignItems: 'center',
     },
-    accountTypeButtonSelected: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
+    accountTypeChipActive: {
+        backgroundColor: '#EEF2FF',
+        borderColor: '#6366F1',
     },
-    accountTypeButtonText: {
+    accountTypeText: {
         fontSize: 14,
-        color: '#6c757d',
-        fontWeight: '500',
-    },
-    accountTypeButtonTextSelected: {
-        color: '#fff',
         fontWeight: '600',
+        color: '#6B7280',
     },
-    // Checkbox Styles
-    checkboxContainer: {
+    accountTypeTextActive: {
+        color: '#6366F1',
+    },
+    checkboxRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 24,
     },
     checkbox: {
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
+        borderRadius: 6,
         borderWidth: 2,
-        borderColor: '#dee2e6',
-        borderRadius: 4,
-        marginRight: 12,
+        borderColor: '#D1D5DB',
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: 12,
     },
     checkboxChecked: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
+        backgroundColor: '#6366F1',
+        borderColor: '#6366F1',
     },
     checkmark: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '700',
     },
     checkboxLabel: {
         fontSize: 14,
-        color: '#2d4150',
+        color: '#374151',
+        fontWeight: '500',
     },
-    // Button Styles
-    addBankButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 12,
-        borderRadius: 8,
+    primaryButton: {
+        backgroundColor: '#6366F1',
+        borderRadius: 12,
+        paddingVertical: 16,
         alignItems: 'center',
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    primaryButtonDisabled: {
+        backgroundColor: '#E5E7EB',
+        shadowOpacity: 0,
+    },
+    primaryButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    payoutHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    availableChip: {
+        backgroundColor: '#D1FAE5',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+    },
+    availableText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#065F46',
+    },
+    amountInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 2,
+        borderColor: '#E5E7EB',
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        marginBottom: 24,
+    },
+    currencySymbol: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#9CA3AF',
+        marginRight: 8,
+    },
+    amountInput: {
+        flex: 1,
+        fontSize: 36,
+        fontWeight: '700',
+        color: '#111827',
+        padding: 0,
+    },
+    warningBox: {
+        backgroundColor: '#FEF3C7',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+    },
+    warningText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#92400E',
+        marginBottom: 4,
+    },
+    warningSubtext: {
+        fontSize: 13,
+        color: '#B45309',
+    },
+    bankScroll: {
         marginTop: 8,
     },
-    addBankButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    // Bank Account Item Styles
-    bankAccountItem: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f3f4',
-    },
-    bankAccountInfo: {
-        flex: 1,
-    },
-    bankName: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#2d4150',
-        marginBottom: 4,
-    },
-    bankAccountDetails: {
-        fontSize: 12,
-        color: '#6c757d',
-        marginBottom: 2,
-        textTransform: 'capitalize',
-    },
-    bankAccountName: {
-        fontSize: 12,
-        color: '#6c757d',
-    },
-    defaultBadge: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+    bankSelectCard: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 2,
+        borderColor: '#E5E7EB',
         borderRadius: 12,
-    },
-    defaultBadgeText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: '600',
-        textTransform: 'uppercase',
-    },
-    // Payout Request Styles
-    availableBalance: {
-        fontSize: 14,
-        color: '#4CAF50',
-        fontWeight: '600',
-        marginBottom: 16,
-        textAlign: 'center',
-    },
-    noBankAccountText: {
-        fontSize: 14,
-        color: '#dc3545',
-        fontStyle: 'italic',
-        textAlign: 'center',
-        paddingVertical: 16,
-    },
-    bankSelectionContainer: {
-        flexDirection: 'row',
-        paddingVertical: 8,
-    },
-    bankSelectionItem: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 8,
-        backgroundColor: '#f8f9fa',
-        borderWidth: 1,
-        borderColor: '#dee2e6',
+        padding: 16,
         marginRight: 12,
-        minWidth: 120,
+        minWidth: 140,
         alignItems: 'center',
     },
-    bankSelectionItemSelected: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
+    bankSelectCardActive: {
+        backgroundColor: '#EEF2FF',
+        borderColor: '#6366F1',
     },
-    bankSelectionName: {
-        fontSize: 12,
-        color: '#2d4150',
-        fontWeight: '600',
+    bankSelectIcon: {
+        fontSize: 28,
+        marginBottom: 8,
+    },
+    bankSelectName: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#374151',
         marginBottom: 4,
         textAlign: 'center',
     },
-    bankSelectionNameSelected: {
-        color: '#fff',
+    bankSelectNameActive: {
+        color: '#6366F1',
     },
-    bankSelectionDetails: {
-        fontSize: 10,
-        color: '#6c757d',
-        textAlign: 'center',
-    },
-    bankSelectionDetailsSelected: {
-        color: '#fff',
-    },
-    requestPayoutButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    requestPayoutButtonDisabled: {
-        backgroundColor: '#dee2e6',
-    },
-    requestPayoutButtonText: {
-        color: '#fff',
-        fontSize: 16,
+    bankSelectNumber: {
+        fontSize: 12,
+        color: '#9CA3AF',
         fontWeight: '600',
     },
-    payoutNote: {
-        fontSize: 12,
-        color: '#6c757d',
-        textAlign: 'center',
-        marginTop: 12,
-        lineHeight: 16,
+    bankSelectNumberActive: {
+        color: '#818CF8',
     },
-    // Payout History Styles
-    payoutHistoryItem: {
+    infoText: {
+        fontSize: 13,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginTop: 16,
+        lineHeight: 18,
+    },
+    payoutHistoryCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 12,
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    payoutHistoryHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        paddingVertical: 12,
+        alignItems: 'center',
+        marginBottom: 16,
+        paddingBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f3f4',
-    },
-    payoutHistoryLeft: {
-        flex: 1,
+        borderBottomColor: '#F3F4F6',
     },
     payoutHistoryAmount: {
-        fontSize: 16,
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#111827',
+    },
+    payoutHistoryDetails: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    payoutHistoryLabel: {
+        fontSize: 13,
+        color: '#9CA3AF',
+        fontWeight: '500',
+    },
+    payoutHistoryValue: {
+        fontSize: 14,
+        color: '#374151',
         fontWeight: '600',
-        color: '#2d4150',
-        marginBottom: 4,
-    },
-    payoutHistoryDate: {
-        fontSize: 12,
-        color: '#6c757d',
-        marginBottom: 2,
-    },
-    payoutHistoryBank: {
-        fontSize: 12,
-        color: '#6c757d',
-        marginBottom: 2,
-    },
-    payoutHistoryEta: {
-        fontSize: 11,
-        color: '#007AFF',
-        fontStyle: 'italic',
-    },
-    payoutHistoryStatusBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginLeft: 12,
-    },
-    payoutHistoryStatusText: {
-        color: '#fff',
-        fontSize: 10,
-        fontWeight: '600',
-        textTransform: 'uppercase',
     },
 });
 
-export default EarningModal
+export default EarningModal;

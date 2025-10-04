@@ -87,3 +87,9 @@ export const formatThreadTime = (timestamp: string): string => {
   const diffInWeeks = Math.floor(diffInDays / 7);
   return `${diffInWeeks}w ago`;
 };
+
+export function capitalizeFirstLetter(str: string | undefined): string {
+  if (!str) return ""; // handle null, undefined, or empty string
+
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

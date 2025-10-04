@@ -56,6 +56,7 @@ export class AuthAdapter {
   }
   async refreshOrClearSession() {
     const { data, error } = await this.client.supabase.auth.refreshSession();
+    console.log(data, error, "data, error");
     return { data, error };
   }
 }
