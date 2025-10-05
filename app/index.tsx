@@ -67,6 +67,15 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
     }
   }, [loading, session]);
 
+  // Subscribe to realtime updates
+  // useAppointmentSync(session?.user?.id as string);
+  // // Initial sync on login
+  // useEffect(() => {
+  //   if (session?.user?.id) {
+  //     syncAppointments(session?.user?.id);
+  //   }
+  // }, [session?.user?.id]);
+
   if (loading) {
     return (
       <SkeletonLoader />

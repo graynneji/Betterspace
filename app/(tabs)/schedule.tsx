@@ -33,7 +33,7 @@ type AppointmentBaseFilter = {
 interface DbAppointment {
     id: number;
     title: string;
-    start: string;
+    time: string;
     backgroundColor: string;
     borderColor: string;
     description?: string;
@@ -108,7 +108,7 @@ const Schedule: React.FC = () => {
         isTherapist
             ? (therapistFilter as Partial<AppointmentBaseFilter>)
             : (patientFilter as Partial<AppointmentBaseFilter>),
-        "id, start, title, backgroundColor, borderColor, description",
+        "id, time, title, backgroundColor, borderColor, description",
         !!userId,
         {}
     );
@@ -133,12 +133,11 @@ const Schedule: React.FC = () => {
     );
 
     const patients = patientsData?.result || [];
-
     // Convert database appointments to calendar events
     useEffect(() => {
         if (data?.result) {
             const convertedEvents: CalendarEvent[] = data.result.map((apt: DbAppointment) => {
-                const appointmentDate = new Date(apt.start);
+                const appointmentDate = new Date(apt.time);
                 const dateString = appointmentDate.toISOString().split('T')[0];
                 const timeString = appointmentDate.toTimeString().slice(0, 5);
 
@@ -334,7 +333,7 @@ const Schedule: React.FC = () => {
                     onPress={openAddEventModal}
                     disabled={!selectedDate}
                 >
-                    <Ionicons name='add-circle-outline' size={30} color="#2d4150" />
+                    <Ionicons name='add-outline' size={30} color="#2d4150" />
                 </TouchableOpacity>
             </View>
 

@@ -5,7 +5,7 @@ import CreatePostModal from '@/components/CreatePostModal';
 import ErrorMessage from '@/components/ErrorMessage';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetAll, useRpc } from '@/hooks/useCrud';
-import { capitalizeFirstLetter, formatThreadTime } from '@/utils';
+import { capitalizeFirstLetter, formatNumber, formatThreadTime } from '@/utils';
 import { initialDiscussions as rawInitialDiscussions } from '@/utils/communityUtilis';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -20,7 +20,6 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from 'react-native-toast-message';
 
 interface Author {
     id: string;
@@ -164,27 +163,51 @@ const Community: React.FC<CommunityProps> = () => {
         });
     }, [data?.result, activeCategory, searchTerm]);
 
-    const createLikesMutation = useCrudCreate("article_likes")
+    const createLikesMutation = useCrudCreate("article_likes", [["article_likes"], ["articles"]])
 
-    const handleLikes = async (userId: string, likes: LikesProps[]): Promise<void> => {
-        Toast.show({
-            type: "success",
-            text1: "Post Created",
-            text2: "Your post has been shared with the community.",
-            visibilityTime: 2000,
-            autoHide: true,
-            topOffset: 60,
-        });
+    const handleLikes = async (userId: string, likes: LikesProps[], discussion: Discussion): Promise<void> => {
 
-        if (likes?.some(like => like.user_id === userId)) {
-            // User has already liked the post, so we remove the like
-            return
-        }
+
+        // if (likes?.some(like => like.user_id === userId)) {
+        //     return
+        // }
+        // console.log(discussion?.id)
+        // const post = {
+        //     user_id: userId,
+        //     discussion_id: discussion?.id,
+        // };
+        // const likesResult = await createLikesMutation.mutateAsync(post)
+        // console.log(likesResult, "likeslikes")
+        if (likes?.some(like => like.user_id === userId)) return;
+
         const post = {
             user_id: userId,
-            discussion_id: discussion?.id,
+            discussion_id: discussion.id,
         };
-        await createLikesMutation.mutateAsync(post)
+
+        try {
+            // optimistic update
+            discussion.article_likes = [
+                ...(discussion.article_likes ?? []),
+                {
+                    user_id: userId,
+                    id: `optimistic-${userId}-${discussion.id}`,
+                    discussion_id: discussion.id,
+                    created_at: new Date().toISOString(),
+                }
+            ];
+
+            // mutate server
+            const likesResult = await createLikesMutation.mutateAsync(post);
+
+            // optionally revalidate after success
+            // refetch();
+        } catch (err) {
+            // rollback optimistic update if needed
+            discussion.article_likes = discussion.article_likes?.filter(
+                l => l.user_id !== userId
+            );
+        }
 
     };
     const rpcViewMutation = useRpc("increment_views_bigint", ["article"])
@@ -213,6 +236,7 @@ const Community: React.FC<CommunityProps> = () => {
     // Render individual discussion item
     const renderDiscussionItem = ({ item }: { item: Discussion }) => (
         <TouchableOpacity
+            activeOpacity={1}
             style={styles.discussionCard}
             onPress={() => handleDiscussionPress(item)}
         >
@@ -239,14 +263,15 @@ const Community: React.FC<CommunityProps> = () => {
             </View>
 
             <Text style={styles.discussionTitle}>{item.title}</Text>
-            <Text style={styles.discussionContent} numberOfLines={2}>
+            {/* <Text style={styles.discussionContent} numberOfLines={2}> */}
+            <Text style={styles.discussionContent} >
                 {item.content}
             </Text>
 
             <View style={styles.discussionFooter}>
                 <View style={styles.stats}>
                     <TouchableOpacity
-                        onPress={() => handleLikes(userId, item.article_likes ?? [])}
+                        onPress={() => handleLikes(userId, item.article_likes ?? [], item)}
                         activeOpacity={1}
 
                     >
@@ -310,7 +335,7 @@ const Community: React.FC<CommunityProps> = () => {
             {/* Quick Stats */}
             <View style={styles.quickStats}>
                 <Text style={styles.discussionCount}>
-                    {(filteredDiscussions?.length ?? 0)} {(filteredDiscussions?.length === 1 ? 'thread' : 'threads')}
+                    {(formatNumber(filteredDiscussions?.length ?? 0))} {(filteredDiscussions?.length === 1 ? 'thread' : 'threads')}
                 </Text>
                 <TouchableOpacity
                     style={styles.statsToggle}

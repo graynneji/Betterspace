@@ -275,11 +275,13 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                             onChangeText={(content) => setNewPost({ ...newPost, content })}
                             // onChangeText={setContent}
                             multiline
-                            maxLength={1000}
+                            maxLength={280}
+                            // maxLength={1000}
                             textAlignVertical="top"
                             placeholderTextColor="#9ca3af"
                         />
-                        <Text style={styles.charCount}>{newPost.content.length}/1000</Text>
+                        {/* <Text style={styles.charCount}>{newPost.content.length}/1000</Text> */}
+                        <Text style={styles.charCount}>{newPost.content.length}/280</Text>
                     </View>
 
                     {/* Category Selection */}

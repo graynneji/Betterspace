@@ -2,7 +2,7 @@ import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { capitalizeFirstLetter } from '@/utils';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Keyboard,
     KeyboardAvoidingView,
@@ -91,9 +91,10 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
 }) => {
     const params = useLocalSearchParams();
     const discussion: Discussion = params.discussion ? JSON.parse(params.discussion as string) : {};
+    const initialLikes = { result: discussion?.article_likes || [], count: discussion?.article_likes?.length || 0 }
+    const [likes, setLikes] = useState<{ result: LikesProps[] | null; count: number | null }>(initialLikes);
     // console.log(discussion, "comments")
     const [comments, setComments] = useState<Comment[]>(discussion?.article_comments || []);
-    console.log(comments, "comments")
     const [newComment, setNewComment] = useState<string>('');
     // const [discussion, setDiscussion] = useState()
     // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
@@ -103,12 +104,14 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     // const userId = session?.user?.id!
     const createCommentMutation = useCrudCreate("article_comments")
     const { data, isLoading, error } = useGetById("article_comments", { article_id: discussion?.id }, "*", !!discussion?.id, {})
-    const { data: likes, isLoading: likesLoading, error: likesError } = useGetById(
+    const { data: likesData, isLoading: likesLoading, error: likesError } = useGetById(
         "article_likes",
-        {},
+        { discussion_id: discussion?.id },
+        // {},
         "*",
         !!discussion?.id,
-        { match: { user_id: params?.userId, discussion_id: discussion?.id } },
+        // { match: { user_id: params?.userId, discussion_id: discussion?.id } },
+        {}
     );
     const createLikesMutation = useCrudCreate("article_likes", [["article_likes"], ["article"]])
     // if (error) {
@@ -121,6 +124,10 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     //         topOffset: 60,
     //     });
     // }
+
+    useEffect(() => {
+        setLikes(likesData ?? initialLikes);
+    }, [likesData]);
     const formatTime = (timestamp: string): string => {
         const now = new Date();
         const postTime = new Date(timestamp);
@@ -137,18 +144,53 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     };
 
     const handleLikePress = async (): Promise<void> => {
-        console.log(params?.userId, "userId", discussion?.id)
-        if ((likes?.result ?? []).length > 0) {
-            // already liked, don't insert again
-            return;
-        }
         if (!discussion?.id || !params?.userId) return;
-        const post = {
-            user_id: params?.userId,
-            discussion_id: discussion?.id,
+
+        const alreadyLiked = (likes?.result ?? []).some(
+            (like) => like.user_id === params.userId
+        );
+        if (alreadyLiked) return;
+
+        // Build optimistic like
+        const optimisticLike: LikesProps = {
+            user_id: params.userId as string,
+            discussion_id: discussion.id,
+            id: `optimistic-${params.userId}-${discussion.id}`,
+            created_at: new Date().toISOString(),
         };
-        const likeResult = await createLikesMutation.mutateAsync(post)
-        console.log(likeResult, "likeResult")
+
+        // ✅ Apply optimistic update
+        setLikes((prev) => ({
+            result: [...(prev?.result ?? []), optimisticLike],
+            count: (prev?.count ?? 0) + 1,
+        }));
+
+        try {
+            // Call API
+            const likeResult = await createLikesMutation.mutateAsync({
+                user_id: params.userId,
+                discussion_id: discussion.id,
+            });
+
+            // Replace optimistic like with server response
+            setLikes((prev) => ({
+                result: (prev?.result ?? []).map((like) =>
+                    like.id === optimisticLike.id && likeResult && typeof likeResult === "object" && "user_id" in likeResult && "id" in likeResult
+                        ? (likeResult as LikesProps)
+                        : like
+                ),
+                count: prev?.count ?? 0,
+            }));
+        } catch (err) {
+            // ❌ Rollback on failure
+            setLikes((prev) => ({
+                result: (prev?.result ?? []).filter(
+                    (like) => like.id !== optimisticLike.id
+                ),
+                count: Math.max((prev?.count ?? 1) - 1, 0),
+            }));
+            // console.error("Like failed:", err);
+        }
     };
 
     const handleAddComment = async (): Promise<void> => {

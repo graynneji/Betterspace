@@ -1,4 +1,5 @@
 // import TherapistDashboard from '@/components/TherapistDash-v2';
+import MessageStatusIcon from '@/components/MessageStatus';
 import TherapistBioModal from '@/components/TherapistBioModal';
 import WelcomeTip from '@/components/WelcomeTipModal';
 import { useCheckAuth } from '@/context/AuthContext';
@@ -66,6 +67,7 @@ type Message = {
   message: string;
   sender_id: string
   reciever_id: string
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 };
 
 type sendMessage = {
@@ -111,10 +113,40 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
       }
     }, [session, patientId])
   );
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
 
+  // Combine real messages with optimistic ones
+  const allMessages = React.useMemo(() => {
+    const realMessageIds = new Set(messages?.map(m => m.id) || []);
+
+    const validOptimisticMessages = optimisticMessages.filter(
+      om => !realMessageIds.has(om.id) && om.id.startsWith('temp-')
+    );
+
+    // Add default status to real messages
+    const messagesWithStatus = (messages || []).map(msg => ({
+      ...msg,
+      status: msg.status || 'delivered' as const
+    }));
+
+    return [...messagesWithStatus, ...validOptimisticMessages];
+  }, [messages, optimisticMessages]);
+  // const groupMessagesByDate = () => {
+  //   const groups: Record<string, Message[]> = {};
+  //   messages?.forEach((msg) => {
+  //     const date = msg.created_at
+  //       ? formatDate(msg.created_at)
+  //       : "Unknown Date";
+  //     if (!groups[date]) {
+  //       groups[date] = [];
+  //     }
+  //     groups[date].push(msg);
+  //   });
+  //   return groups;
+  // };
   const groupMessagesByDate = () => {
     const groups: Record<string, Message[]> = {};
-    messages?.forEach((msg) => {
+    allMessages?.forEach((msg) => { // Change from messages to allMessages
       const date = msg.created_at
         ? formatDate(msg.created_at)
         : "Unknown Date";
@@ -153,17 +185,52 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
   };
 
 
+
   const sendMessage = () => {
     if (messageText.trim()) {
-      const newMessage: sendMessage = {
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMessage: Message = {
+        id: tempId,
         message: messageText,
         sender_id: senderId,
-        reciever_id: receiverId
+        reciever_id: receiverId,
+        created_at: new Date().toISOString(),
+        status: 'sending'
       };
-      createMessageMutation.mutateAsync(newMessage)
-      // setMessages([...messages, newMessage]);
+
+      setOptimisticMessages(prev => [...prev, optimisticMessage]);
+
+      const messageToSend = messageText;
       setMessageText('');
+
+      createMessageMutation.mutateAsync({
+        message: messageToSend,
+        sender_id: senderId,
+        reciever_id: receiverId,
+      })
+        .then((response) => {
+          // Remove optimistic message immediately
+          setOptimisticMessages(prev =>
+            prev.filter(msg => msg.id !== tempId)
+          );
+        })
+        .catch((error) => {
+          setOptimisticMessages(prev =>
+            prev.map(msg =>
+              msg.id === tempId
+                ? { ...msg, status: 'failed' as const }
+                : msg
+            )
+          );
+        });
+      setTimeout(() => {
+        setOptimisticMessages(prev =>
+          prev.filter(msg => msg.id !== tempId)
+        );
+      }, 5000);
     }
+
+
   };
 
   const startAudioCall = () => {
@@ -232,7 +299,7 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
       </View>
 
       {/* Messages */}
-      <FlatList
+      {/* <FlatList
         ref={listRef}
         data={flatData.reverse()}
         keyExtractor={(item, index) =>
@@ -257,21 +324,21 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
                 isSender ? styles.senderMessage : styles.receiverMessage,
               ]}
             >
-              <View
-                style={[
-                  styles.messageBubble,
-                  isSender ? styles.senderBubble : styles.receiverBubble,
-                ]}
-              >
-                <Text
+                <View
                   style={[
-                    styles.messageText,
-                    isSender ? styles.senderText : styles.receiverText,
+                    styles.messageBubble,
+                    isSender ? styles.senderBubble : styles.receiverBubble,
                   ]}
                 >
-                  {item.message}
-                </Text>
-                <Text
+                  <Text
+                    style={[
+                      styles.messageText,
+                      isSender ? styles.senderText : styles.receiverText,
+                    ]}
+                  >
+                    {item.message}
+                  </Text>
+                  <Text
                   style={[
                     styles.timestamp,
                     isSender ? styles.senderTimestamp : styles.receiverTimestamp,
@@ -279,6 +346,73 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
                 >
                   {formatTime(item.created_at)}
                 </Text>
+                   
+              </View>
+            </View>
+          );
+        }}
+        inverted
+        style={styles.messagesContainer}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 10 }}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={() => {
+          listRef.current?.scrollToEnd({ animated: true });
+        }}
+
+      /> */}
+      <FlatList
+        ref={listRef}
+        data={flatData.reverse()}
+        keyExtractor={(item, index) =>
+          item.type === "header" ? `header-${item.date}-${index}` : `${item.id}`
+        }
+        renderItem={({ item }) => {
+          if (item.type === "header") {
+            return (
+              <View style={{ flexDirection: 'column' }}>
+                <Text style={styles.date}>
+                  {isToday(item.date) ? "Today" : item.date}
+                </Text>
+              </View>
+            );
+          }
+
+          const isSender = item.sender_id === senderId;
+          return (
+            <View style={{ flexDirection: 'column' }}>
+              <View
+                key={item.id}
+                style={[
+                  styles.messageContainer,
+                  isSender ? styles.senderMessage : styles.receiverMessage,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.messageBubble,
+                    isSender ? styles.senderBubble : styles.receiverBubble,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.messageText,
+                      isSender ? styles.senderText : styles.receiverText,
+                    ]}
+                  >
+                    {item.message}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.timestamp,
+                      isSender ? styles.senderTimestamp : styles.receiverTimestamp,
+                    ]}
+                  >
+                    {formatTime(item.created_at)}
+                  </Text>
+
+
+                </View>
+                {isSender && <MessageStatusIcon status={item.status} />}
               </View>
             </View>
           );

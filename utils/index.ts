@@ -93,3 +93,23 @@ export function capitalizeFirstLetter(str: string | undefined): string {
 
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export function formatNumber(num: number): string {
+  if (num === null || num === undefined || isNaN(num)) return "0";
+
+  const abs = Math.abs(num);
+
+  if (abs < 1000) {
+    return String(num); // e.g. 532
+  } else if (abs < 1_000_000) {
+    return (num / 1_000).toFixed(abs >= 10_000 ? 0 : 1) + "K"; // up to 999K
+  } else if (abs < 1_000_000_000) {
+    return (num / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1) + "M"; // up to 999M
+  } else if (abs < 1_000_000_000_000) {
+    return (num / 1_000_000_000).toFixed(abs >= 10_000_000_000 ? 0 : 1) + "B"; // up to 999B
+  } else {
+    return (
+      (num / 1_000_000_000_000).toFixed(abs >= 10_000_000_000_000 ? 0 : 1) + "T"
+    ); // Trillions
+  }
+}
