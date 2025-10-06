@@ -1,11 +1,23 @@
+import { Colors } from '@/constants/Colors';
+import { useCheckAuth } from '@/context/AuthContext';
+import { signUpschema } from '@/lib/validationSchema';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
+// type QuestionnaireAnswers = Record<string, string>;
 
-const CreateAccount = () => {
+interface QuestionAireAnswersProps {
+    answers: Record<string, string>;
+}
+
+const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     const navigation = useNavigation();
+    const { register } = useCheckAuth()
 
     useEffect(() => {
         navigation.setOptions({
@@ -40,57 +52,81 @@ const CreateAccount = () => {
         }
     };
 
-    const validateForm = () => {
-        const newErrors: Record<string, string> = {};
+    // const validateForm = () => {
+    //     const newErrors: Record<string, string> = {};
 
-        if (!formData.firstName.trim()) {
-            newErrors.firstName = 'First name is required';
-        }
+    //     if (!formData.firstName.trim()) {
+    //         newErrors.firstName = 'First name is required';
+    //     }
 
-        if (!formData.lastName.trim()) {
-            newErrors.lastName = 'Last name is required';
-        }
+    //     if (!formData.lastName.trim()) {
+    //         newErrors.lastName = 'Last name is required';
+    //     }
 
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
+    //     if (!formData.email.trim()) {
+    //         newErrors.email = 'Email is required';
+    //     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    //         newErrors.email = 'Please enter a valid email address';
+    //     }
 
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
-        }
+    //     if (!formData.password) {
+    //         newErrors.password = 'Password is required';
+    //     } else if (formData.password.length < 8) {
+    //         newErrors.password = 'Password must be at least 8 characters';
+    //     }
 
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Please confirm your password';
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
-        }
+    //     if (!formData.confirmPassword) {
+    //         newErrors.confirmPassword = 'Please confirm your password';
+    //     } else if (formData.password !== formData.confirmPassword) {
+    //         newErrors.confirmPassword = 'Passwords do not match';
+    //     }
 
-        if (!formData.licenseNumber.trim()) {
-            newErrors.licenseNumber = 'License number is required';
-        }
+    //     if (!formData.licenseNumber.trim()) {
+    //         newErrors.licenseNumber = 'License number is required';
+    //     }
 
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone number is required';
-        }
+    //     if (!formData.phone.trim()) {
+    //         newErrors.phone = 'Phone number is required';
+    //     }
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+    //     setErrors(newErrors);
+    //     return Object.keys(newErrors).length === 0;
+    // };
 
     const handleCreateAccount = async () => {
-        if (!validateForm()) {
-            return;
+        // if (!validateForm()) {
+        //     return;
+        // }
+        const validationSchema = signUpschema.safeParse({
+            email: formData.email,
+            password: formData.password
+        })
+        if (!validationSchema.success) {
+            return new Promise((resolve, reject) => {
+                Alert.alert("Something went wrong", validationSchema.error.issues[0].message, [
+                    { text: "Cancel", style: "cancel", onPress: () => reject(validationSchema.error.issues[0].message) },
+                ]);
+            });
         }
 
         setIsLoading(true);
         try {
             // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // await new Promise(resolve => setTimeout(resolve, 2000));
+            // await register()
+            //check 
+            //             const { data: therapists, error: therapistError } = await supabase
+            //   .from("therapist")
+            //   .select("id");
 
+            // if (therapistError || !therapists?.length) {
+            //   return { error: "No therapists available" };
+            // }
+
+            // const therapistIds = therapists.map((t) => t.id);
+            // const randomTherapistId = therapistIds[Math.floor(Math.random() * therapistIds.length)];
+
+            // therapistId = randomTherapistId;
             // Handle successful account creation
             console.log('Account created:', formData);
             Alert.alert(
@@ -130,7 +166,7 @@ const CreateAccount = () => {
                 <Ionicons
                     name={iconName}
                     size={20}
-                    color={errors[field] ? '#ef4444' : '#9ca3af'}
+                    color={errors[field] ? '#ef4444' : colors.placeholder}
                     style={styles.inputIcon}
                 />
                 <TextInput
@@ -142,7 +178,7 @@ const CreateAccount = () => {
                     keyboardType={keyboardType}
                     autoCapitalize={field === 'email' ? 'none' : 'words'}
                     autoCorrect={false}
-                    placeholderTextColor="#9ca3af"
+                    placeholderTextColor={colors.placeholder}
                 />
             </View>
             {errors[field] && (
@@ -153,73 +189,80 @@ const CreateAccount = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                <View style={styles.header}>
-                    <Text style={styles.title}>Create Account</Text>
-                    <Text style={styles.subtitle}>
-                        Join BetterSpace and start connecting with clients
-                    </Text>
-                </View>
-
-                <View style={styles.form}>
-                    {renderInputField('First Name', 'firstName', 'Enter your first name', 'person-outline')}
-                    {renderInputField('Email Address', 'email', 'Enter your email address', 'mail-outline', false, 'email-address')}
-                    {renderInputField('Phone Number', 'phone', 'Enter your phone number', 'call-outline', false, 'phone-pad')}
-                    {renderInputField('Password', 'password', 'Create a password', 'lock-closed-outline', true)}
-
-                    <View style={styles.termsContainer}>
-                        <View style={styles.termsIconWrapper}>
-                            <Ionicons
-                                name="shield-checkmark-outline"
-                                size={24}
-                                color="#047857"
-                                style={styles.termsIcon}
-                            />
-                            <Text style={styles.termsText}>
-                                By creating an account, you agree to our{' '}
-                                <Text style={styles.termsLink}>Terms of Service</Text>
-                                {' '}and{' '}
-                                <Text style={styles.termsLink}>Privacy Policy</Text>
+                    <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                        <View style={styles.header}>
+                            <Text style={styles.title}>Create Account</Text>
+                            <Text style={styles.subtitle}>
+                                Join BetterSpace and start connecting with clients
                             </Text>
                         </View>
-                    </View>
 
-                    <TouchableOpacity
-                        style={[
-                            styles.createAccountButton,
-                            isLoading ? styles.createAccountButtonDisabled : styles.createAccountButtonEnabled
-                        ]}
-                        onPress={handleCreateAccount}
-                        disabled={isLoading}
-                    >
-                        <Text style={[
-                            styles.createAccountButtonText,
-                            isLoading ? styles.createAccountButtonTextDisabled : styles.createAccountButtonTextEnabled
-                        ]}>
-                            {isLoading ? 'Creating Account...' : 'Create Account'}
-                        </Text>
-                    </TouchableOpacity>
+                        <View style={styles.form}>
+                            {renderInputField('First Name', 'firstName', 'Enter your first name', 'person-outline')}
+                            {renderInputField('Email Address', 'email', 'Enter your email address', 'mail-outline', false, 'email-address')}
+                            {renderInputField('Phone Number', 'phone', 'Enter your phone number', 'call-outline', false, 'phone-pad')}
+                            {renderInputField('Password', 'password', 'Create a password', 'lock-closed-outline', true)}
 
-                    <View style={styles.signInContainer}>
-                        <Text style={styles.signInText}>
-                            Already have an account?{' '}
-                            <TouchableOpacity onPress={() => {/* Navigate to SignIn */ }}>
-                                <Text style={styles.signInLink}>Sign In</Text>
+                            <View style={styles.termsContainer}>
+                                <View style={styles.termsIconWrapper}>
+                                    <Ionicons
+                                        name="shield-checkmark-outline"
+                                        size={24}
+                                        color="#047857"
+                                        style={styles.termsIcon}
+                                    />
+                                    <Text style={styles.termsText}>
+                                        By creating an account, you agree to our{' '}
+                                        <Text style={styles.termsLink}>Terms of Service</Text>
+                                        {' '}and{' '}
+                                        <Text style={styles.termsLink}>Privacy Policy</Text>
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.createAccountButton,
+                                    isLoading ? styles.createAccountButtonDisabled : styles.createAccountButtonEnabled
+                                ]}
+                                onPress={handleCreateAccount}
+                                disabled={isLoading}
+                            >
+                                <Text style={[
+                                    styles.createAccountButtonText,
+                                    isLoading ? styles.createAccountButtonTextDisabled : styles.createAccountButtonTextEnabled
+                                ]}>
+                                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                                </Text>
                             </TouchableOpacity>
-                        </Text>
-                    </View>
-                </View>
-            </ScrollView>
+
+                            <View style={styles.signInContainer}>
+                                <Text style={styles.signInText}>
+                                    Already have an account?{' '}
+                                    <TouchableOpacity onPress={() => {/* Navigate to SignIn */ }}>
+                                        <Text style={styles.signInLink}>Sign In</Text>
+                                    </TouchableOpacity>
+                                </Text>
+                            </View>
+                        </View>
+                    </ScrollView>
+
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.background,
     },
     scrollView: {
         flex: 1,
@@ -232,11 +275,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#111827', // gray-900
+        color: colors.text, // gray-900
         marginBottom: 8,
     },
     subtitle: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         fontSize: 18,
         lineHeight: 28,
     },
@@ -249,7 +292,7 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#374151', // gray-700
+        color: colors.inputText, // gray-700
         marginBottom: 8,
     },
     inputWrapper: {
@@ -257,10 +300,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 2,
         borderRadius: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.inputBackground,
     },
     inputWrapperDefault: {
-        borderColor: '#e5e7eb', // gray-200
+        borderColor: colors.inputBorder, // gray-200
     },
     inputWrapperError: {
         borderColor: '#ef4444', // red-500
@@ -274,7 +317,7 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingRight: 16,
         fontSize: 16,
-        color: '#111827',
+        color: colors.inputText,
     },
     errorText: {
         color: '#ef4444', // red-500
@@ -294,14 +337,14 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     termsText: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         fontSize: 14,
         lineHeight: 20,
         textAlign: 'center',
         flex: 1,
     },
     termsLink: {
-        color: '#047857', // emerald-700
+        color: colors.primary, // emerald-700
         textDecorationLine: 'underline',
     },
     createAccountButton: {
@@ -311,7 +354,7 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     createAccountButtonEnabled: {
-        backgroundColor: '#047857', // emerald-700
+        backgroundColor: colors.primary, // emerald-700
     },
     createAccountButtonDisabled: {
         backgroundColor: '#d1d5db', // gray-300
@@ -330,11 +373,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     signInText: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         fontSize: 16,
     },
     signInLink: {
-        color: '#047857', // emerald-700
+        color: colors.primary, // emerald-700
         fontWeight: '600',
         textDecorationLine: 'underline',
     },

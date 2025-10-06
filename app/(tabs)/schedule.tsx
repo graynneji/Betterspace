@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { capitalizeFirstLetter } from '@/utils';
@@ -14,6 +15,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
@@ -90,6 +92,9 @@ const Schedule: React.FC = () => {
     const [selectedPatient, setSelectedPatient] = useState<string>('');
     const [showPatientPicker, setShowPatientPicker] = useState<boolean>(false);
     const createAppointmentMutaion = useCrudCreate("appointment");
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
 
     const { session } = useCheckAuth();
     const userId = session?.user?.id!;
@@ -139,7 +144,11 @@ const Schedule: React.FC = () => {
             const convertedEvents: CalendarEvent[] = data.result.map((apt: DbAppointment) => {
                 const appointmentDate = new Date(apt.time);
                 const dateString = appointmentDate.toISOString().split('T')[0];
-                const timeString = appointmentDate.toTimeString().slice(0, 5);
+                const timeString = appointmentDate.toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                });
 
                 return {
                     id: apt.id.toString(),
@@ -325,6 +334,24 @@ const Schedule: React.FC = () => {
         }
     };
 
+    const calendarTheme = {
+        backgroundColor: colors.surface,
+        calendarBackground: colors.surface,
+        textSectionTitleColor: colors.textTertiary,
+        selectedDayBackgroundColor: '#007AFF',
+        selectedDayTextColor: '#ffffff',
+        todayTextColor: '#007AFF',
+        dayTextColor: colors.text,
+        textDisabledColor: colors.textTertiary,
+        dotColor: '#00adf5',
+        selectedDotColor: '#ffffff',
+        arrowColor: '#007AFF',
+        disabledArrowColor: '#d9e1e8',
+        monthTextColor: colors.text,
+        indicatorColor: '#007AFF',
+
+    }
+
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
@@ -333,32 +360,34 @@ const Schedule: React.FC = () => {
                     onPress={openAddEventModal}
                     disabled={!selectedDate}
                 >
-                    <Ionicons name='add-outline' size={30} color="#2d4150" />
+                    <Ionicons name='add-outline' size={30} color={colors.text} />
                 </TouchableOpacity>
             </View>
 
             <Calendar
+                key={colorScheme}
                 style={styles.calendar}
                 initialDate={today}
                 onDayPress={onDayPress}
                 markingType="multi-dot"
                 markedDates={getMarkedDates()}
-                theme={{
-                    backgroundColor: '#ffffff',
-                    calendarBackground: '#ffffff',
-                    textSectionTitleColor: '#b6c1cd',
-                    selectedDayBackgroundColor: '#007AFF',
-                    selectedDayTextColor: '#ffffff',
-                    todayTextColor: '#007AFF',
-                    dayTextColor: '#2d4150',
-                    textDisabledColor: '#d9e1e8',
-                    dotColor: '#00adf5',
-                    selectedDotColor: '#ffffff',
-                    arrowColor: '#007AFF',
-                    disabledArrowColor: '#d9e1e8',
-                    monthTextColor: '#2d4150',
-                    indicatorColor: '#007AFF',
-                }}
+                // theme={{
+                //     backgroundColor: '#ffffff',
+                //     calendarBackground: '#ffffff',
+                //     textSectionTitleColor: '#b6c1cd',
+                //     selectedDayBackgroundColor: '#007AFF',
+                //     selectedDayTextColor: '#ffffff',
+                //     todayTextColor: '#007AFF',
+                //     dayTextColor: '#2d4150',
+                //     textDisabledColor: '#d9e1e8',
+                //     dotColor: '#00adf5',
+                //     selectedDotColor: '#ffffff',
+                //     arrowColor: '#007AFF',
+                //     disabledArrowColor: '#d9e1e8',
+                //     monthTextColor: '#2d4150',
+                //     indicatorColor: '#007AFF',
+                // }}
+                theme={calendarTheme}
             />
 
             {selectedDate && (
@@ -425,7 +454,7 @@ const Schedule: React.FC = () => {
                         {/* Patient Selection - Only for Therapists */}
                         {isTherapist && !editingEvent && (
                             <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Select Patient *</Text>
+                                <Text style={styles.inputLabel}>Select Patient <Text style={styles.required}>*</Text></Text>
                                 <TouchableOpacity
                                     activeOpacity={1}
                                     style={styles.patientButton}
@@ -433,23 +462,23 @@ const Schedule: React.FC = () => {
                                 >
                                     <Text style={styles.patientButtonText}>
                                         {selectedPatient
-                                            ? patients.find((p: Patient) => p.patient_id === selectedPatient)?.name
+                                            ? capitalizeFirstLetter(patients.find((p: Patient) => p.patient_id === selectedPatient)?.name)
                                             : 'Choose a patient'}
                                     </Text>
-                                    <Ionicons name="chevron-down" size={20} color="#6c757d" />
+                                    <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
                                 </TouchableOpacity>
                             </View>
                         )}
 
                         <View style={styles.inputGroup}>
-                            <Text style={styles.inputLabel}>Title *</Text>
+                            <Text style={styles.inputLabel}>Title <Text style={styles.required}>*</Text></Text>
                             <TextInput
                                 style={styles.textInput}
                                 value={eventForm.title}
                                 onChangeText={(text) => setEventForm(prev => ({ ...prev, title: text }))}
                                 placeholder="Enter event title"
                                 autoFocus={!isTherapist}
-                                placeholderTextColor="#9ca3af"
+                                placeholderTextColor={colors.placeholder}
                             />
                         </View>
 
@@ -462,7 +491,7 @@ const Schedule: React.FC = () => {
                                 placeholder="Enter event description"
                                 multiline
                                 numberOfLines={3}
-                                placeholderTextColor="#9ca3af"
+                                placeholderTextColor={colors.placeholder}
                             />
                         </View>
 
@@ -667,10 +696,10 @@ const Schedule: React.FC = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.background,
     },
     header: {
         flexDirection: 'row',
@@ -688,21 +717,21 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#2d4150',
+        color: colors.text,
     },
     calendar: {
         marginBottom: 8,
     },
     eventsSection: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface,
         marginTop: 8,
         paddingTop: 16,
     },
     eventsSectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         paddingHorizontal: 16,
         marginBottom: 12,
     },
@@ -711,7 +740,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     eventItem: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.item,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -726,7 +755,7 @@ const styles = StyleSheet.create({
     eventTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         flex: 1,
         marginRight: 12,
     },
@@ -739,38 +768,38 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     deleteButtonText: {
-        color: '#fff',
+        color: colors.text,
         fontSize: 16,
         fontWeight: 'bold',
         lineHeight: 20,
     },
     eventTime: {
         fontSize: 14,
-        color: '#4CAF50',
+        color: colors.primary,
         fontWeight: '500',
         marginBottom: 4,
     },
     eventCategory: {
         fontSize: 12,
-        color: '#6c757d',
+        color: colors.textSecondary,
         fontWeight: '500',
         marginBottom: 8,
     },
     eventDescription: {
         fontSize: 14,
-        color: '#495057',
+        color: colors.textTertiary,
         lineHeight: 20,
     },
     noEventsText: {
         textAlign: 'center',
-        color: '#6c757d',
+        color: colors.textSecondary,
         fontSize: 16,
         marginTop: 32,
         fontStyle: 'italic',
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.background,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -779,25 +808,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: colors.divider,
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
     },
     cancelBtn: {
         padding: 4,
     },
     cancelBtnText: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     saveButton: {
         paddingVertical: 8,
     },
     saveButtonText: {
-        color: '#4CAF50',
+        color: colors.primary,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -809,19 +838,22 @@ const styles = StyleSheet.create({
     inputGroup: {
         marginBottom: 24,
     },
+    required: {
+        color: '#ef4444'
+    },
     inputLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         marginBottom: 8,
     },
     textInput: {
         borderWidth: 1,
-        borderColor: '#dee2e6',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        backgroundColor: 'white',
+        backgroundColor: colors.inputBackground,
     },
     textArea: {
         height: 80,
@@ -829,29 +861,29 @@ const styles = StyleSheet.create({
     },
     timeButton: {
         borderWidth: 1,
-        borderColor: '#dee2e6',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 12,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.inputBackground,
         marginBottom: 5,
     },
     timeButtonText: {
         fontSize: 16,
-        color: '#2d4150',
+        color: colors.inputText,
     },
     patientButton: {
         borderWidth: 1,
-        borderColor: '#dee2e6',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 12,
-        backgroundColor: 'white',
+        backgroundColor: colors.inputBackground,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
     patientButtonText: {
         fontSize: 16,
-        color: '#2d4150',
+        color: colors.inputText,
     },
     categoryContainer: {
         flexDirection: 'row',
@@ -861,19 +893,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: '#e9ecef',
+        backgroundColor: colors.surface,
         marginRight: 8,
     },
     categoryButtonSelected: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
     },
     categoryButtonText: {
         fontSize: 14,
-        color: '#495057',
+        color: colors.textTertiary,
         fontWeight: '500',
     },
     categoryButtonTextSelected: {
-        color: '#fff',
+        color: colors.text,
     },
     colorContainer: {
         flexDirection: 'row',
@@ -888,7 +920,7 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     colorButtonSelected: {
-        borderColor: '#2d4150',
+        borderColor: colors.text,
     },
     // pickerModalOverlay: {
     //     flex: 1,
@@ -942,7 +974,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     pickerModalContent: {
-        backgroundColor: 'white',
+        backgroundColor: colors.background,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '80%',
@@ -958,17 +990,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: colors.divider,
     },
     pickerTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#2d4150',
+        color: colors.text,
     },
     patientCountBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f0fdf4',
+        backgroundColor: colors.item,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
@@ -980,7 +1012,7 @@ const styles = StyleSheet.create({
     patientCountText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#4CAF50',
+        color: colors.primary,
         marginLeft: 6,
     },
     patientList: {
@@ -994,13 +1026,15 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginVertical: 6,
         borderRadius: 12,
-        backgroundColor: '#f8f9fa',
-        borderWidth: 2,
-        borderColor: 'transparent',
+        backgroundColor: Colors.light ? colors.surface : colors.item,
+        borderColor: colors.border,
+        borderWidth: 1,
+        // borderColor: 'transparent',
     },
     patientItemSelected: {
-        backgroundColor: '#f0fdf4',
-        borderColor: '#4CAF50',
+        backgroundColor: colors.item,
+        borderColor: colors.primary,
+        borderWidth: 2,
     },
     patientAvatar: {
         width: 44,
@@ -1012,12 +1046,12 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     patientAvatarSelected: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
     },
     patientAvatarText: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#6c757d',
+        color: colors.textSecondary,
     },
     patientInfo: {
         flex: 1,
@@ -1025,11 +1059,11 @@ const styles = StyleSheet.create({
     patientItemText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         marginBottom: 4,
     },
     patientItemTextSelected: {
-        color: '#4CAF50',
+        color: colors.primary,
     },
     patientIdContainer: {
         flexDirection: 'row',
@@ -1038,14 +1072,14 @@ const styles = StyleSheet.create({
     },
     patientIdText: {
         fontSize: 13,
-        color: '#6c757d',
+        color: colors.textSecondary,
         fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
     },
     checkmarkCircle: {
         width: 28,
         height: 28,
         borderRadius: 14,
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1058,13 +1092,13 @@ const styles = StyleSheet.create({
     emptyStateText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#6c757d',
+        color: colors.textSecondary,
         marginTop: 16,
         marginBottom: 8,
     },
     emptyStateSubtext: {
         fontSize: 14,
-        color: '#9ca3af',
+        color: colors.textTertiary,
         textAlign: 'center',
     },
 });

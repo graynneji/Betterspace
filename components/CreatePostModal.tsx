@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate } from '@/hooks/useCrud';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -57,9 +59,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [newPost, setNewPost] = useState<newPost>(initialPost)
     const createPostMutation = useCrudCreate<newPost>("article")
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
 
     const handleSubmit = async (): Promise<void> => {
-        if (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id) {
+        if (!newPost.content.trim() || !newPost.category_id) {
             Alert.alert('Missing Information', 'Please fill in all required fields and select a category.');
             return;
         }
@@ -220,15 +225,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                         activeOpacity={1}
                         style={[
                             styles.submitBtn,
-                            (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting) &&
+                            (!newPost.content.trim() || !newPost.category_id || isSubmitting) &&
                             styles.submitBtnDisabled
                         ]}
                         onPress={handleSubmit}
-                        disabled={!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting}
+                        disabled={!newPost.content.trim() || !newPost.category_id || isSubmitting}
                     >
                         <Text style={[
                             styles.submitBtnText,
-                            (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || isSubmitting) &&
+                            (!newPost.content.trim() || !newPost.category_id || isSubmitting) &&
                             styles.submitBtnTextDisabled
                         ]}>
                             {isSubmitting ? 'Posting...' : 'Post'}
@@ -248,16 +253,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                     {/* Title Input */}
                     <View style={styles.inputSection}>
                         <Text style={styles.label}>
-                            Title <Text style={styles.required}>*</Text>
+                            Title
                         </Text>
                         <TextInput
                             style={styles.titleInput}
                             placeholder="What would you like to discuss?"
                             value={newPost.title}
                             onChangeText={(title) => setNewPost({ ...newPost, title })}
-                            // onChangeText={setTitle}
                             maxLength={100}
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={colors.placeholder}
                         />
                         <Text style={styles.charCount}>{newPost.title.length}/100</Text>
                     </View>
@@ -271,16 +275,12 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
                             style={styles.contentInput}
                             placeholder="Share your thoughts, experiences, or questions..."
                             value={newPost.content}
-                            // value={content}
                             onChangeText={(content) => setNewPost({ ...newPost, content })}
-                            // onChangeText={setContent}
                             multiline
                             maxLength={280}
-                            // maxLength={1000}
                             textAlignVertical="top"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={colors.placeholder}
                         />
-                        {/* <Text style={styles.charCount}>{newPost.content.length}/1000</Text> */}
                         <Text style={styles.charCount}>{newPost.content.length}/280</Text>
                     </View>
 
@@ -373,24 +373,24 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     header: {
-        backgroundColor: 'white',
+        backgroundColor: colors.background,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.divider,
     },
     cancelBtn: {
         padding: 4,
-        color: '#4CAF50'
+        color: colors.primary
     },
     cancelBtnText: {
         fontSize: 16,
@@ -399,16 +399,17 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
     },
     submitBtn: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 8,
     },
     submitBtnDisabled: {
-        backgroundColor: '#d1d5db',
+        backgroundColor: colors.textTertiary
+        // backgroundColor: '#d1d5db',
     },
     submitBtnText: {
         color: 'white',
@@ -423,7 +424,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     guidelinesBanner: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.item,
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
@@ -444,36 +445,36 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.text,
         marginBottom: 8,
     },
     required: {
         color: '#ef4444',
     },
     titleInput: {
-        backgroundColor: 'white',
+        backgroundColor: colors.inputBackground,
         borderWidth: 1,
-        borderColor: '#d1d5db',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#374151',
+        color: colors.text,
     },
     contentInput: {
-        backgroundColor: 'white',
+        backgroundColor: colors.inputBackground,
         borderWidth: 1,
-        borderColor: '#d1d5db',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 12,
         fontSize: 16,
-        color: '#374151',
+        color: colors.text,
         height: 120,
     },
     charCount: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textTertiary,
         textAlign: 'right',
         marginTop: 4,
     },
@@ -486,17 +487,17 @@ const styles = StyleSheet.create({
     categoryOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderRadius: 20,
         marginRight: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         minWidth: 120,
     },
     categoryOptionSelected: {
-        backgroundColor: '#eff6ff',
+        // backgroundColor: colors.item,
         borderColor: '#3b82f6',
     },
     categoryIconContainer: {
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
     },
     categoryOptionText: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textTertiary,
         flex: 1,
         fontWeight: '500',
     },
@@ -522,11 +523,11 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 16,
     },
     optionItem: {
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -534,7 +535,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     optionContent: {
         flexDirection: 'row',
@@ -550,18 +551,18 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#111827',
+        color: colors.text,
     },
     optionDescription: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     toggle: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.inputBackground,
         alignItems: 'center',
         justifyContent: 'center',
     },

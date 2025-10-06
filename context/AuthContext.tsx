@@ -38,7 +38,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const callRefresh = async () => {
-    await authService.refreshSession()
+    const { success } = await authService.refreshSession()
+    if (!success) return
   }
 
   useEffect(() => {
@@ -88,7 +89,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await SecureStore.setItemAsync('password', password);
     setLoading(true);
     try {
-      const { data } = await authService.login(email, password);
+      const loginResult = await authService.login(email, password);
+      const data = loginResult?.data ?? { session: null };
       setSession(data?.session);
       return { data };
     } finally {

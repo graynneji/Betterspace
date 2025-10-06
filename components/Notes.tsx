@@ -1,8 +1,9 @@
+import { Colors } from "@/constants/Colors";
 import { useGetById } from "@/hooks/useCrud";
 import { NOTE_TYPES, PatientNote } from "@/types";
 import { formatDateTime } from "@/utils";
 import React, { Fragment } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 // import { NOTE_TYPES, PatientNote } from "./TherapistDashboard";
 interface Note {
     notes: []
@@ -20,6 +21,9 @@ const Notes: React.FC<NotesProps> = ({ openAddNoteModal, selectedPatient, getNot
     const { data: patientNotes, error } = useGetById("patient_notes", { patient_id: selectedPatient?.id }, "*", undefined, {})
     const notesCount = patientNotes?.result?.length || 0;
     const hasNotes = notesCount > 0;
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     return (
         <View style={styles.notesCard}>
             <View style={styles.notesHeader}>
@@ -73,9 +77,9 @@ const Notes: React.FC<NotesProps> = ({ openAddNoteModal, selectedPatient, getNot
         </View>
     )
 }
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     notesCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
@@ -84,7 +88,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     notesHeader: {
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     addNoteButton: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
@@ -106,21 +110,23 @@ const styles = StyleSheet.create({
     },
     noNotesText: {
         textAlign: 'center',
-        color: '#6c757d',
+        color: colors.textSecondary,
         fontSize: 16,
         marginTop: 16,
         fontStyle: 'italic',
     },
     noteItem: {
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.item,
         borderRadius: 8,
         padding: 12,
         marginBottom: 12,
+        // borderColor: colors.border,
+        // borderWidth: 1,
     },
     cardTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         marginBottom: 16,
     },
     noteHeader: {
@@ -173,12 +179,12 @@ const styles = StyleSheet.create({
     },
     noteDate: {
         fontSize: 12,
-        color: '#6c757d',
+        color: colors.text,
         marginBottom: 8,
     },
     noteContent: {
         fontSize: 14,
-        color: '#2d4150',
+        color: colors.textSecondary,
         lineHeight: 20,
     },
 })

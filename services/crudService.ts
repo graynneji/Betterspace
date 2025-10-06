@@ -49,21 +49,21 @@ export class CrudService {
       if (error) throw new Error(error.message);
       return { result: data, count: count ?? 0 };
     } catch (err: unknown) {
-      // return new Promise((resolve, reject) => {
-      // Alert.alert("Something went wrong", getErrorMessage(err), [
-      //   { text: "Cancel", style: "cancel", onPress: () => reject(err) },
-      // ]);
-      Toast.show({
-        type: "error",
-        text1: "Error Occurred",
-        text2: getErrorMessage(err),
-        visibilityTime: 500,
-        autoHide: true,
-        topOffset: 60,
+      return new Promise((resolve, reject) => {
+        Alert.alert("Something went wrong", getErrorMessage(err), [
+          { text: "Cancel", style: "cancel", onPress: () => reject(err) },
+        ]);
+        // Toast.show({
+        //   type: "error",
+        //   text1: "Error Occurred",
+        //   text2: getErrorMessage(err),
+        //   visibilityTime: 500,
+        //   autoHide: true,
+        //   topOffset: 60,
+        // });
+        setTimeout(() => Toast.hide(), 500);
       });
-      // setTimeout(() => Toast.hide(), 500);
-      // });
-      throw err instanceof Error ? err : new Error(String(err));
+      // throw err instanceof Error ? err : new Error(String(err));
     }
   }
 

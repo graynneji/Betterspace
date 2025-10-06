@@ -1,14 +1,16 @@
 import SkeletonLoader from '@/components/SkeletonLoader';
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { NavigationProp } from '@react-navigation/native';
 import { SplashScreen, useRouter } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import React, { useLayoutEffect, useState } from 'react';
 import {
   ImageBackground,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useColorScheme,
   View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -40,19 +42,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 SplashScreen.preventAutoHideAsync();
 const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const router = useRouter()
-  const handleGetStarted = () => {
-    // Navigate to next screen (e.g., sign up)
-    // navigation.navigate('SignUp');
-    router.replace('/auth/get-started');
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const [tapCount, setTapCount] = useState(0);
+
+
+  const handleSecretTap = () => {
+    setTapCount((prev) => {
+      const newCount = prev + 1;
+      if (newCount >= 5) {
+        setTimeout(() => {
+          router.replace("/auth/therapist-signin");
+        }, 50);
+      }
+      return newCount;
+    });
   };
 
-  const handleSignIn = () => {
-    // Navigate to sign in screen
-    router.replace('/auth/signin');
-    // navigation.navigate('SignIn');
-  };
   const { session, loading } = useCheckAuth()
-  console.log(session, "session")
 
   useLayoutEffect(() => {
     if (loading) return;
@@ -75,17 +82,13 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
   //     syncAppointments(session?.user?.id);
   //   }
   // }, [session?.user?.id]);
-
-  if (loading) {
-    return (
-      <SkeletonLoader />
-    );
-  }
+  const handleGetStarted = () => router.replace('/auth/get-started');
+  const handleSignIn = () => router.replace('/auth/signin');
+  if (loading) return <SkeletonLoader />;
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
-
+      <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       {/* Background Image */}
       <ImageBackground
         source={require('../assets/images/IMg.png')}
@@ -140,12 +143,21 @@ const WelcomeScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
                     Sign in
                   </Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity activeOpacity={0.6} onPress={handleSecretTap}>
+                  <Text style={styles.provider}>I am a betterspace provider</Text>
+                </TouchableOpacity>
+                {/* {tapCount > 0 && tapCount < 5 && (
+                  <Text style={styles.hintText}>
+                    {5 - tapCount} more taps to unlock provider access
+                  </Text>
+                )} */}
               </View>
 
               {/* Bottom indicator */}
               {/* <View style={styles.indicatorContainer}>
-              <View style={styles.indicator} />
-            </View> */}
+                <View style={styles.indicator} />
+              </View> */}
             </View>
           </SafeAreaView>
         </View>
@@ -216,6 +228,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '500',
+  },
+  provider: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.5)', // subtle fade
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  hintText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 12,
+    marginTop: 6,
+    textAlign: 'center'
   },
   indicatorContainer: {
     flexDirection: 'row',

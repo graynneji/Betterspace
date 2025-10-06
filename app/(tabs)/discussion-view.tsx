@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { capitalizeFirstLetter } from '@/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -100,6 +102,9 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
     // const [likes, setLikes] = useState<number>(discussion.likes || 0);
     const router = useRouter()
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     // const { session } = useCheckAuth()
     // const userId = session?.user?.id!
     const createCommentMutation = useCrudCreate("article_comments")
@@ -279,13 +284,13 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         style={styles.backBtn}
                         onPress={() => router.replace("community")}
                     >
-                        <Ionicons name="arrow-back" size={24} color="#374151" />
+                        <Ionicons name="arrow-back" size={24} color={colors.text} />
                     </TouchableOpacity>
 
                     <Text style={styles.headerTitle}>Discussion</Text>
 
                     <TouchableOpacity style={styles.moreBtn}>
-                        <Ionicons name="ellipsis-horizontal" size={24} color="#6b7280" />
+                        <Ionicons name="ellipsis-horizontal" size={24} color={colors.textTertiary} />
                     </TouchableOpacity>
                 </View>
 
@@ -397,7 +402,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         onChangeText={setNewComment}
                         multiline
                         maxLength={500}
-                        placeholderTextColor="#9ca3af"
+                        placeholderTextColor={colors.placeholder}
                     />
                     <TouchableOpacity
                         style={[
@@ -419,10 +424,10 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     header: {
         // backgroundColor: 'white',
@@ -447,7 +452,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
     },
     moreBtn: {
         padding: 4,
@@ -457,7 +462,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     discussionCard: {
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 20,
         marginTop: 16,
@@ -466,7 +471,7 @@ const styles = StyleSheet.create({
         // shadowOffset: { width: 0, height: 1 },
         // shadowOpacity: 0.1,
         // shadowRadius: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     discussionHeader: {
@@ -506,11 +511,11 @@ const styles = StyleSheet.create({
     authorName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
     },
     postTime: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     categoryBadge: {
@@ -530,13 +535,13 @@ const styles = StyleSheet.create({
     discussionTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 12,
         lineHeight: 28,
     },
     discussionContent: {
         fontSize: 16,
-        color: '#374151',
+        color: colors.textSecondary,
         lineHeight: 24,
         marginBottom: 20,
     },
@@ -545,7 +550,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderTopColor: colors.divider,
     },
     statButton: {
         flexDirection: 'row',
@@ -554,7 +559,7 @@ const styles = StyleSheet.create({
     },
     statText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginLeft: 6,
         fontWeight: '500',
     },
@@ -562,7 +567,7 @@ const styles = StyleSheet.create({
         color: '#ef4444',
     },
     commentsSection: {
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 16,
         marginTop: 16,
@@ -572,13 +577,13 @@ const styles = StyleSheet.create({
         // shadowOffset: { width: 0, height: 1 },
         // shadowOpacity: 0.1,
         // shadowRadius: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     commentsTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 16,
     },
     noComments: {
@@ -588,12 +593,12 @@ const styles = StyleSheet.create({
     noCommentsText: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 12,
     },
     noCommentsSubtext: {
         fontSize: 14,
-        color: '#9ca3af',
+        color: colors.textTertiary,
         marginTop: 4,
     },
     commentsList: {
@@ -601,7 +606,7 @@ const styles = StyleSheet.create({
     },
     commentCard: {
         padding: 16,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.item,
         borderRadius: 12,
     },
     commentHeader: {
@@ -621,11 +626,11 @@ const styles = StyleSheet.create({
     commentAuthorName: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
     },
     commentTime: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textTertiary,
     },
     commentLikeBtn: {
         flexDirection: 'row',
@@ -633,12 +638,12 @@ const styles = StyleSheet.create({
     },
     commentLikes: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginLeft: 4,
     },
     commentContent: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textSecondary,
         lineHeight: 20,
     },
     commentInputContainer: {
@@ -648,19 +653,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: 'transparent',
+        // borderTopColor: colors.inputBorder,
     },
     commentInput: {
         flex: 1,
         borderWidth: 1,
-        borderColor: '#d1d5db',
+        borderColor: colors.inputBorder,
         borderRadius: 20,
         paddingHorizontal: 16,
         paddingVertical: 12,
         maxHeight: 100,
         fontSize: 14,
-        backgroundColor: '#fff',
-        color: '#374151',
+        backgroundColor: colors.inputBackground,
+        color: colors.inputText,
     },
     sendBtn: {
         marginLeft: 12,

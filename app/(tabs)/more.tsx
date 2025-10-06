@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +13,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
+    useColorScheme,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,6 +58,9 @@ const tabs: TabItem[] = [
 const More: React.FC = () => {
     const [activeTab, setActiveTab] = useState<string>('profile');
     const { session, loading: isPending } = useCheckAuth()
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     const initialUser = {
         name: session?.user?.user_metadata?.full_name || User.name,
         email: session?.user?.email || User.email,
@@ -246,7 +251,7 @@ const More: React.FC = () => {
                                 <View>
                                     <Text style={styles.optionTitle}>Biometric Authentication</Text>
                                     <Text style={styles.optionSubtitle}>
-                                        Use fingerprint or face ID to unlock the app
+                                        Unlock app with fingerprint or face ID
                                     </Text>
                                 </View>
                                 <Switch
@@ -417,10 +422,10 @@ const More: React.FC = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8FAFC',
+        backgroundColor: colors.background,
     },
     header: {
         paddingHorizontal: 20,
@@ -437,7 +442,7 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: colors.text,
     },
     tabContainer: {
         // backgroundColor: '#FFFFFF',
@@ -463,7 +468,7 @@ const styles = StyleSheet.create({
     tabText: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#6B7280',
+        color: colors.textSecondary,
         marginTop: 4,
         textAlign: 'center',
     },
@@ -480,7 +485,7 @@ const styles = StyleSheet.create({
     profileHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         padding: 20,
         borderRadius: 12,
         marginBottom: 20,
@@ -489,7 +494,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
 
     },
@@ -498,7 +503,7 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: 40,
         marginRight: 16,
-        backgroundColor: '#F3F4F6', // Fallback background color
+        backgroundColor: colors.item, // Fallback background color
     },
     profileInfo: {
         flex: 1,
@@ -506,12 +511,12 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 4,
     },
     userRole: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
         marginBottom: 4,
     },
     therapistInfo: {
@@ -525,12 +530,12 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     editButtonText: {
-        color: '#FFFFFF',
+        color: colors.item,
         fontSize: 14,
         fontWeight: '500',
     },
     formSection: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         padding: 20,
         borderRadius: 12,
         // shadowColor: '#000',
@@ -538,7 +543,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     inputGroup: {
@@ -547,20 +552,20 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#374151',
+        color: colors.text,
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#D1D5DB',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.inputBackground,
     },
     inputDisabled: {
-        backgroundColor: '#F9FAFB',
-        color: '#6B7280',
+        backgroundColor: colors.item,
+        color: colors.textSecondary,
     },
     saveButton: {
         backgroundColor: '#10B981',
@@ -580,12 +585,12 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 8,
     },
     sectionSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
     },
     changePasswordButton: {
         backgroundColor: '#EF4444',
@@ -600,7 +605,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     securityOptions: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 20,
         marginTop: 20,
@@ -609,7 +614,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     securityOption: {
@@ -620,12 +625,12 @@ const styles = StyleSheet.create({
     optionTitle: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 4,
     },
     optionSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
     },
     sessionStats: {
         flexDirection: 'row',
@@ -633,7 +638,7 @@ const styles = StyleSheet.create({
     },
     statCard: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         padding: 20,
         borderRadius: 12,
         alignItems: 'center',
@@ -643,7 +648,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     statNumber: {
@@ -654,11 +659,11 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
         textAlign: 'center',
     },
     nextSession: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         padding: 20,
         borderRadius: 12,
         marginBottom: 20,
@@ -667,13 +672,13 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     nextSessionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 8,
     },
     nextSessionDate: {
@@ -700,7 +705,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     sessionHistory: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 20,
         // shadowColor: '#000',
@@ -708,13 +713,13 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     historyTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 16,
     },
     sessionItem: {
@@ -722,7 +727,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: colors.divider,
     },
     sessionDate: {
         width: 60,
@@ -731,11 +736,11 @@ const styles = StyleSheet.create({
     sessionDay: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#1F2937',
+        color: colors.text,
     },
     sessionTime: {
         fontSize: 12,
-        color: '#6B7280',
+        color: colors.textSecondary,
     },
     sessionDetails: {
         flex: 1,
@@ -743,7 +748,7 @@ const styles = StyleSheet.create({
     sessionType: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 2,
     },
     sessionStatus: {
@@ -753,16 +758,16 @@ const styles = StyleSheet.create({
     sessionAction: {
         paddingHorizontal: 12,
         paddingVertical: 6,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: colors.item,
         borderRadius: 6,
     },
     sessionActionText: {
         fontSize: 12,
-        color: '#374151',
+        color: colors.text,
         fontWeight: '500',
     },
     settingsSection: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 20,
         // shadowColor: '#000',
@@ -770,7 +775,7 @@ const styles = StyleSheet.create({
         // shadowOpacity: 0.1,
         // shadowRadius: 4,
         // elevation: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     settingItem: {
@@ -779,21 +784,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: colors.divider,
     },
     settingTitle: {
         fontSize: 16,
         fontWeight: '500',
-        color: '#1F2937',
+        color: colors.text,
         marginBottom: 4,
     },
     settingSubtitle: {
         fontSize: 14,
-        color: '#6B7280',
+        color: colors.textSecondary,
     },
     settingArrow: {
         fontSize: 20,
-        color: '#9CA3AF',
+        color: colors.textTertiary,
     },
     dangerItem: {
         borderBottomWidth: 0,

@@ -2,6 +2,7 @@
 import MessageStatusIcon from '@/components/MessageStatus';
 import TherapistBioModal from '@/components/TherapistBioModal';
 import WelcomeTip from '@/components/WelcomeTipModal';
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { useMessage } from '@/hooks/useMessage';
@@ -16,12 +17,13 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  StatusBar,
+  // StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  useColorScheme,
   View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -86,6 +88,9 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
   const createMessageMutation = useCrudCreate<sendMessage>("messages")
   const router = useRouter()
   const listRef = useRef<FlatList<any>>(null);
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const styles = createStyles(colors);
   const receiverId = therapist ? therapist?.therapist_id : patientId || ""
   const options = {
     or: `and(sender_id.eq.${senderId},reciever_id.eq.${receiverId}),and(sender_id.eq.${receiverId},reciever_id.eq.${senderId})`,
@@ -229,8 +234,6 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
         );
       }, 5000);
     }
-
-
   };
 
   const startAudioCall = () => {
@@ -258,14 +261,14 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" />
+      {/* <StatusBar barStyle="dark-content" /> */}
       {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
 
       {/* Header */}
       <View style={styles.header}>
         {
           !therapist && (<TouchableOpacity onPress={() => router.replace("therapist-dashboard")}>
-            <Ionicons name="chevron-back-outline" size={24} color="#333" />
+            <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
           </TouchableOpacity>)
         }
 
@@ -290,10 +293,10 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
 
         <View style={styles.callButtons}>
           <TouchableOpacity style={styles.callButton} onPress={startAudioCall}>
-            <Ionicons name="call" size={20} color="#4CAF50" />
+            <Ionicons name="call" size={20} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.callButton} onPress={startVideoCall}>
-            <Ionicons name="videocam" size={20} color="#4CAF50" />
+            <Ionicons name="videocam" size={20} color={colors.primary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -440,7 +443,7 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
               placeholder="Type your message..."
               multiline
               maxLength={500}
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.placeholder}
             />
             {/* <TouchableOpacity style={styles.sendButton} > */}
             <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
@@ -477,6 +480,9 @@ const CallScreen = ({ route, navigation }: CallScreenProps) => {
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isVideoEnabled, setIsVideoEnabled] = useState(isVideo);
+  const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
+  const styles = createStyles(colors);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -510,7 +516,7 @@ const CallScreen = ({ route, navigation }: CallScreenProps) => {
 
   return (
     <SafeAreaView style={[styles.container, styles.callContainer]}>
-      <StatusBar barStyle="light-content" />
+      {/* <StatusBar barStyle="light-content" /> */}
 
       {isVideoEnabled ? (
         <View style={styles.videoContainer}>
@@ -623,10 +629,10 @@ const Session = () => {
 
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.background,
   },
 
   // Header Styles
@@ -635,7 +641,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
   },
   therapistInfo: {
     flex: 1,
@@ -652,7 +658,7 @@ const styles = StyleSheet.create({
   headerName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
   },
   onlineStatus: {
     flexDirection: 'row',
@@ -663,12 +669,12 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.primary,
     marginRight: 4,
   },
   onlineText: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: colors.primary,
   },
   callButtons: {
     flexDirection: 'row',
@@ -677,7 +683,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.headerBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -690,7 +696,8 @@ const styles = StyleSheet.create({
   },
   date: {
     textAlign: "center",
-    marginVertical: 30
+    marginVertical: 30,
+    color: colors.text
   },
   messageContainer: {
     flexDirection: 'row',
@@ -715,11 +722,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   senderBubble: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.senderBubble,
     borderBottomRightRadius: 4,
   },
   receiverBubble: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.receiverBubble,
     borderBottomLeftRadius: 4,
   },
   messageText: {
@@ -727,21 +734,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   senderText: {
-    color: '#fff',
+    color: colors.senderText,
   },
   receiverText: {
-    color: '#333',
+    color: colors.receiverText,
   },
   timestamp: {
     fontSize: 12,
     marginTop: 4,
   },
   senderTimestamp: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: colors.timestamp,
     textAlign: 'right',
   },
   receiverTimestamp: {
-    color: '#999',
+    color: colors.timestampReceiver,
   },
 
   // Input Styles
@@ -755,24 +762,27 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: colors.inputBorder,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxHeight: 100,
     fontSize: 16,
-    backgroundColor: '#fff'
+    color: colors.inputText,
+    backgroundColor: colors.inputBackground
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
   },
 
+
+  ////////////////////////TODO///////////////////////////////
   // Call Screen Styles
   callContainer: {
     backgroundColor: '#1a1a1a',

@@ -33,7 +33,7 @@ export class AuthService {
         text1: "Login Failed",
         text2: error.message,
       });
-      throw new Error(error.message);
+      return;
     }
     return { data };
   }
@@ -45,7 +45,7 @@ export class AuthService {
         text1: "Logout Failed",
         text2: error.message,
       });
-      throw new Error(error.message);
+      return;
     }
     return { error };
   }

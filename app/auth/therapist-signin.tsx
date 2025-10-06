@@ -12,18 +12,15 @@ import { Alert, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpac
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 
-
-
 interface LoginData {
     data: {
         user: User | null;
     }
 }
 
-
-const SignIn = () => {
+const TherapistSignIn = () => {
     const navigation = useNavigation();
-    const router = useRouter()
+    const router = useRouter();
 
     useEffect(() => {
         navigation.setOptions({
@@ -38,7 +35,7 @@ const SignIn = () => {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [rememberMe, setRememberMe] = useState(false);
-    const { login, loading, logout } = useCheckAuth()
+    const { login, loading, logout } = useCheckAuth();
     const [biometricIcon, setBiometricIcon] = useState<keyof typeof Ionicons.glyphMap>('scan');
     const [biometricText, setBiometricText] = useState('Continue with Biometrics');
     const colorScheme = useColorScheme();
@@ -65,31 +62,24 @@ const SignIn = () => {
                 setBiometricText('Continue with Biometrics');
             }
         } catch (error) {
-            return null
-            // console.error('Error checking biometric types:', error);
+            return null;
         }
     };
 
     const handleBiometricAuth = async () => {
         try {
-            // Check if biometric authentication is available
             const isAvailable = await LocalAuthentication.hasHardwareAsync();
             if (!isAvailable) {
                 Alert.alert('Error', 'Biometric authentication is not available on this device');
                 return;
             }
 
-            // Check what types of biometrics are enrolled
-            const biometricTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
-
-            // Check if biometrics are enrolled
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
             if (!isEnrolled) {
                 Alert.alert('Error', 'No biometric data is enrolled on this device');
                 return;
             }
 
-            // Perform authentication
             const result = await LocalAuthentication.authenticateAsync({
                 promptMessage: 'Authenticate to continue',
                 fallbackLabel: 'Use PIN/Password',
@@ -97,33 +87,26 @@ const SignIn = () => {
             });
 
             if (result.success) {
-                // Authentication successful
-                // Proceed with login logic
-                const email = await SecureStore.getItemAsync('email');
-                const password = await SecureStore.getItemAsync('password');
+                const email = await SecureStore.getItemAsync('therapist_email');
+                const password = await SecureStore.getItemAsync('therapist_password');
 
                 if (!email || !password) {
-                    // Credentials were cleared => force user to log in manually
                     Alert.alert('Please login manually');
                     return;
                 }
 
                 const { data }: LoginData = await login(email, password);
 
-                if (data && data?.user?.user_metadata?.designation === "patient") {
-                    router.push("session");
+                if (data && data?.user?.user_metadata?.designation === "therapist") {
+                    router.push("therapist-dashboard");
                 } else {
                     Alert.alert('Provider account', 'kindly go to the therapist portal to signin')
                     await logout()
                     await AsyncStorage.removeItem("supabase.auth.token");
                 }
-
-                // }
             } else {
-                // Authentication failed or cancelled
                 Alert.alert('Failed', 'Biometric authentication failed');
             }
-
         } catch (error) {
             Alert.alert('Error', 'An error occurred during biometric authentication');
         }
@@ -134,7 +117,6 @@ const SignIn = () => {
             ...prev,
             [field]: value
         }));
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({
                 ...prev,
@@ -143,15 +125,20 @@ const SignIn = () => {
         }
     };
 
-
     const handleSignIn = async () => {
         Keyboard.dismiss();
         const validationSchema = loginSchema.safeParse({
             email: formData.email,
             password: formData.password
-        })
+        });
         try {
+
             if (!validationSchema.success) {
+                // return new Promise((resolve, reject) => {
+                //     Alert.alert("Something went wrong", validationSchema.error.issues[0].message, [
+                //         { text: "Cancel", style: "cancel", onPress: () => reject(validationSchema.error.issues[0].message) },
+                //     ]);
+                // });
                 Toast.show({
                     type: 'error',
                     text1: 'Validation Error',
@@ -163,11 +150,14 @@ const SignIn = () => {
             const { data }: LoginData = await login(formData.email, formData.password);
 
             if (data) {
-
-                if (data && data?.user?.user_metadata?.designation === "patient") {
-                    router.push("session");
+                if (data?.user?.user_metadata?.designation === "therapist") {
+                    // Store credentials for biometric login if remember me is checked
+                    router.push("therapist-dashboard");
+                    if (rememberMe) {
+                        await SecureStore.setItemAsync('therapist_email', formData.email);
+                        await SecureStore.setItemAsync('therapist_password', formData.password);
+                    }
                 } else {
-                    // router.push("session");
                     Alert.alert('Error', 'Invalid therapist credentials. Please check your account type.');
                     await logout()
                     await AsyncStorage.removeItem("supabase.auth.token");
@@ -175,11 +165,11 @@ const SignIn = () => {
             } else {
                 Alert.alert('Error', 'Invalid therapist credentials.')
             }
+
         } catch (err) {
             Alert.alert('Failed', 'We encountered some issues signing you in')
             return
         }
-
     };
 
     const handleForgotPassword = () => {
@@ -194,7 +184,6 @@ const SignIn = () => {
                 {
                     text: 'Send Reset Link',
                     onPress: () => {
-                        // Handle password reset
                         console.log('Password reset for:', formData.email);
                         Alert.alert('Success', 'Password reset link sent to your email!');
                     }
@@ -221,7 +210,6 @@ const SignIn = () => {
                     name={iconName}
                     size={20}
                     color={colors.placeholder}
-                    // color={errors[field] ? '#ef4444' : '#9ca3af'}
                     style={styles.inputIcon}
                 />
                 <TextInput
@@ -236,9 +224,6 @@ const SignIn = () => {
                     placeholderTextColor={colors.placeholder}
                 />
             </View>
-            {/* {errors[field] && (
-                <Text style={styles.errorText}>{errors[field]}</Text>
-            )} */}
         </View>
     );
 
@@ -251,20 +236,21 @@ const SignIn = () => {
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
                 >
-                    {/* <View style={styles.logoContainer}>
-                        <Text style={styles.logoText}>betterspace</Text>
-                        <Text style={styles.logoSubtext}>Professional therapy platform</Text>
-                    </View> */}
-
                     <View style={styles.header}>
+                        <View style={styles.badgeContainer}>
+                            <View style={styles.badge}>
+                                <Ionicons name="medical" size={20} color="#047857" />
+                                <Text style={styles.badgeText}>THERAPIST PORTAL</Text>
+                            </View>
+                        </View>
                         <Text style={styles.title}>Welcome Back</Text>
-
                         <Text style={styles.subtitle}>
-                            Sign in to your Betterspace account
+                            Sign in to your professional account
                         </Text>
                     </View>
+
                     <View style={styles.form}>
-                        {renderInputField('Email Address', 'email', 'Enter your email address', 'mail-outline', false, 'email-address')}
+                        {renderInputField('Professional Email', 'email', 'Enter your work email', 'mail-outline', false, 'email-address')}
                         {renderInputField('Password', 'password', 'Enter your password', 'lock-closed-outline', true)}
 
                         <View style={styles.optionsContainer}>
@@ -300,7 +286,7 @@ const SignIn = () => {
                                 styles.signInButtonText,
                                 loading ? styles.signInButtonTextDisabled : styles.signInButtonTextEnabled
                             ]}>
-                                {loading ? 'Signing In...' : 'Sign In'}
+                                {loading ? 'Signing In...' : 'Sign In to Portal'}
                             </Text>
                         </TouchableOpacity>
 
@@ -310,35 +296,33 @@ const SignIn = () => {
                             <View style={styles.dividerLine} />
                         </View>
 
-                        {/* <TouchableOpacity style={styles.googleSignInButton}>
-                            <View style={styles.googleButtonContent}>
-                                <Ionicons name="logo-google" size={20} color="#4285f4" style={styles.googleIcon} />
-                                <Text style={styles.googleSignInButtonText}>
-                                    Continue with Google
-                                </Text>
-                            </View>
-                        </TouchableOpacity> */}
-
                         <TouchableOpacity style={styles.biometricButton} onPress={handleBiometricAuth}>
                             <View style={styles.buttonContent}>
-                                <Ionicons name={biometricIcon} size={20} color="#6366f1" style={styles.icon} />
+                                <Ionicons name={biometricIcon} size={20} color="#047857" style={styles.icon} />
                                 <Text style={styles.buttonText}>
                                     {biometricText}
                                 </Text>
                             </View>
                         </TouchableOpacity>
 
-                        <View style={styles.createAccountContainer}>
-                            <Text style={styles.createAccountText}>
-                                <Text>Don&apos;t have an account?{' '}</Text>
-                                <TouchableOpacity onPress={() => router.replace("auth/signin")}>
-                                    <Text style={styles.createAccountLink}>Create Account</Text>
-                                </TouchableOpacity>
+                        <View style={styles.infoBox}>
+                            <Ionicons name="information-circle-outline" size={16} color={colors.primary} />
+                            {/* <Ionicons name="information-circle-outline" size={16} color={colors.primary} /> */}
+                            <Text style={styles.infoText}>
+                                This is a secure portal for licensed therapists only.
                             </Text>
+                        </View>
+
+                        <View style={styles.switchContainer}>
+                            <View style={styles.switchText}>
+                                <Text style={styles.patientLoginText}>Looking for patient login?{' '}</Text>
+                                <TouchableOpacity onPress={() => router.replace("auth/sign-in")}>
+                                    <Text style={styles.switchLink}>Switch to Patient Portal</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
                 </ScrollView>
-
             </SafeAreaView>
         </SafeAreaProvider>
     );
@@ -354,36 +338,39 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         paddingHorizontal: 24,
     },
     scrollContent: {
-        // flexGrow: 1,
         justifyContent: 'center',
         paddingVertical: 32,
-    },
-    logoContainer: {
-        alignItems: 'center',
-        marginBottom: 48,
-    },
-    logoText: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#047857', // emerald-700
-        marginBottom: 4,
-    },
-    logoSubtext: {
-        color: colors.text, // gray-600
-        fontSize: 16,
     },
     header: {
         marginBottom: 32,
         alignItems: 'center',
     },
+    badgeContainer: {
+        marginBottom: 16,
+    },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#d1fae5',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 6,
+    },
+    badgeText: {
+        color: '#047857',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: colors.text, // gray-900
+        color: colors.text,
         marginBottom: 8,
     },
     subtitle: {
-        color: colors.textSecondary, // gray-600
+        color: colors.textSecondary,
         fontSize: 16,
         textAlign: 'center',
     },
@@ -396,7 +383,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     inputLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: colors.inputText, // gray-700
+        color: colors.inputText,
         marginBottom: 8,
     },
     inputWrapper: {
@@ -407,10 +394,10 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         backgroundColor: colors.inputBackground,
     },
     inputWrapperDefault: {
-        borderColor: colors.inputBorder, // gray-200
+        borderColor: colors.inputBorder,
     },
     inputWrapperError: {
-        borderColor: '#ef4444', // red-500
+        borderColor: '#ef4444',
     },
     inputIcon: {
         marginLeft: 16,
@@ -423,11 +410,6 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         fontSize: 16,
         color: colors.inputText,
     },
-    // errorText: {
-    //     color: '#ef4444', // red-500
-    //     fontSize: 14,
-    //     marginTop: 4,
-    // },
     optionsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -452,15 +434,15 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         backgroundColor: colors.inputBackground,
     },
     checkboxChecked: {
-        borderColor: '#047857', // emerald-700
-        backgroundColor: '#047857', // emerald-700
+        borderColor: '#047857',
+        backgroundColor: '#047857',
     },
     rememberMeText: {
-        color: colors.textTertiary, // gray-600
+        color: colors.textTertiary,
         fontSize: 14,
     },
     forgotPasswordText: {
-        color: '#047857', // emerald-700
+        color: '#047857',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -472,10 +454,9 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     },
     signInButtonEnabled: {
         backgroundColor: colors.primary,
-        // backgroundColor: '#047857', 
     },
     signInButtonDisabled: {
-        backgroundColor: '#d1d5db', // gray-300
+        backgroundColor: '#d1d5db',
     },
     signInButtonText: {
         fontSize: 18,
@@ -485,7 +466,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         color: 'white',
     },
     signInButtonTextDisabled: {
-        color: '#6b7280', // gray-500
+        color: '#6b7280',
     },
     dividerContainer: {
         flexDirection: 'row',
@@ -495,34 +476,13 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: colors.divider, // gray-200
+        backgroundColor: colors.divider,
     },
     dividerText: {
-        color: colors.textSecondary, // gray-500
+        color: colors.textSecondary,
         fontSize: 14,
         marginHorizontal: 16,
     },
-    // googleSignInButton: {
-    //     borderWidth: 2,
-    //     borderColor: '#e5e7eb', // gray-200
-    //     borderRadius: 25,
-    //     paddingVertical: 16,
-    //     alignItems: 'center',
-    //     backgroundColor: '#ffffff',
-    //     marginBottom: 32,
-    // },
-    // googleButtonContent: {
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    // },
-    // googleIcon: {
-    //     marginRight: 12,
-    // },
-    // googleSignInButtonText: {
-    //     color: '#374151', // gray-700
-    //     fontSize: 16,
-    //     fontWeight: '600',
-    // },
     biometricButton: {
         backgroundColor: colors.surface,
         borderWidth: 1,
@@ -530,7 +490,7 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 12,
         marginVertical: 8,
-        marginBottom: 32,
+        marginBottom: 24,
     },
     buttonContent: {
         flexDirection: 'row',
@@ -545,21 +505,41 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
     },
-    createAccountContainer: {
+    infoBox: {
+        flexDirection: 'row',
+        backgroundColor: '#ecfdf5',
+        alignItems: 'center',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 24,
+        gap: 8,
+    },
+    infoText: {
+        flex: 1,
+        color: '#047857',
+        fontSize: 12,
+        lineHeight: 20,
+    },
+    switchContainer: {
         alignItems: 'center',
     },
-    createAccountText: {
+    switchText: {
         color: colors.textTertiary,
+        // flexDirection: 'row',
         fontSize: 16,
+        gap: 4,
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    createAccountLink: {
+    patientLoginText: {
+        color: colors.textTertiary
+    },
+    switchLink: {
         color: colors.primary,
         fontWeight: '600',
         textDecorationLine: 'underline',
     },
 });
 
-export default SignIn;
+export default TherapistSignIn;

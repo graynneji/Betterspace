@@ -13,7 +13,8 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { data } = await authService.login(email, password);
+      const loginResult = await authService.login(email, password);
+      const data = loginResult?.data ?? { session: null };
       return { data };
     } finally {
       setLoading(false);

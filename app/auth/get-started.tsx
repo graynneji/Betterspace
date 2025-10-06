@@ -1,10 +1,15 @@
 import CreateAccount from "@/components/CreateAccount";
+import { Colors } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "expo-router";
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const GetStarted = () => {
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     const navigation = useNavigation()
     useEffect(() => {
         navigation.setOptions({
@@ -18,70 +23,107 @@ const GetStarted = () => {
     const questions = [
         {
             id: 'q1',
-            title: "Let's get to know you!",
-            subtitle: "What is your primary area of expertise or focusing therapy?",
-            options: [
-                "Trauma and PTSD",
-                "Addiction and Recovery",
-                "Relationship Therapy",
-                "Anxiety and Depression",
-                "Family Therapy"
-            ]
+            title: "What is your gender identity?",
+            subtitle:
+                "Help your therapist tailor a more customized and supportive approach to your needs.",
+            options: ["Man", "Woman"],
+
         },
         {
             id: 'q2',
-            title: "Let's get to know you!",
-            subtitle: "How many years of experience do you have as a licensed therapist?",
+            title: "What is your relationship status?",
+            subtitle: "Relationship status can affect your well-being.",
             options: [
-                "0-1 years",
-                "2-5 years",
-                "6-10 years",
-                "11-15 years",
-                "16+ years"
-            ]
+                "Single",
+                "Married",
+                "Divorced",
+                "Widowed",
+                "Other",
+                "Prefer not to say",
+            ],
+
         },
         {
             id: 'q3',
-            title: "Let's get to know you!",
-            subtitle: "What therapeutic approaches do you primarily use in your practice?",
-            options: [
-                "Cognitive Behavioral Therapy (CBT)",
-                "Dialectical Behavior Therapy (DBT)",
-                "Psychodynamic Therapy",
-                "Humanistic/Person-Centered Therapy",
-                "Solution-Focused Brief Therapy"
-            ]
+            title: "How would you rate your current physical health?",
+            subtitle:
+                "Help your therapist understand your needs better and create a more effective plan.",
+            options: ["Good", "Fair", "Poor"],
+
         },
         {
             id: 'q4',
-            title: "Let's get to know you!",
-            subtitle: "How did you first hear about BetterSpace and our services?",
-            options: [
-                "Social media",
-                "Professional referral",
-                "Online search",
-                "Conference or workshop",
-                "Word of mouth"
-            ]
+            title: "Are you on any medication?",
+            subtitle:
+                "Medication can play a significant role in mental health treatment.",
+            options: ["No", "Yes"],
+
         },
         {
             id: 'q5',
-            title: "Let's get to know you!",
-            subtitle: "What age groups are you most comfortable working with?",
+            title: "Have you been in therapy before?",
+            subtitle:
+                "We create a personalized plan and guide you through after signing up.",
+            options: ["No", "Yes"],
+
+        },
+        {
+            id: 'q6',
+            title: "Why do you want to work on your mental health?",
+            subtitle:
+                "This helps us match you with a therapist who aligns with your goals.",
             options: [
-                "Children (5-12)",
-                "Adolescents (13-17)",
-                "Young Adults (18-25)",
-                "Adults (26-64)",
-                "Seniors (65+)"
-            ]
-        }
+                "I feel depressed",
+                "I have anxious thoughts",
+                "I am grieving",
+                "I lost the purpose of life",
+                "I struggle to have healthy relationships",
+                "I am having a tough time",
+                "I have low self esteem",
+                "I have experienced trauma",
+                "I want to improve all areas of my life",
+                "Just exploring",
+                "Other",
+            ],
+
+        },
+        {
+            id: 'q7',
+            title: "What best describes your current work situation?",
+            subtitle:
+                "Help us understand your daily life and provide more tailored support.",
+            options: [
+                "Employed full-time",
+                "Employed part-time",
+                "Self-employed",
+                "Unemployed",
+                "Student",
+                "Retired",
+                "Other",
+            ],
+
+        },
+        {
+            id: 'q8',
+            title: "How did you get to know about betterspace?",
+            subtitle: "Helps us improve outreach and support.",
+            options: [
+                "Google search",
+                "Facebook",
+                "Youtube",
+                "X (formerly twitter)",
+                "Instagram",
+                "Other",
+            ],
+
+        },
     ];
 
-    const handleAnswerSelect = (questionId: string, answer: string) => {
+    const handleAnswerSelect = (questionId: string, question: string, answer: string) => {
+        console.log(questionId, question, answer, "qaws")
         setAnswers(prev => ({
             ...prev,
-            [questionId]: answer
+            [question]: answer
         }));
     };
 
@@ -95,7 +137,7 @@ const GetStarted = () => {
         }
     };
 
-    // const renderStartScreen = () => (
+    // const RenderStartScreen: React.FC = () => (
     //     <SafeAreaView style={styles.startContainer}>
     //         <StatusBar barStyle="light-content" backgroundColor="#065f46" />
     //         <View style={styles.startContent}>
@@ -124,15 +166,13 @@ const GetStarted = () => {
     //     </SafeAreaView>
     // );
 
-    const renderQuestionnaireScreen = () => {
+    const RenderQuestionnaireScreen: React.FC = () => {
         const currentQuestion = questions[currentQuestionIndex];
         const isLastQuestion = currentQuestionIndex === questions.length - 1;
-        const hasAnswer = answers[currentQuestion.id];
+        const hasAnswer = answers[currentQuestion.title];
 
         return (
             <SafeAreaView style={styles.questionnaireContainer}>
-                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-
                 {/* Progress Bar */}
                 <View style={styles.progressContainer}>
                     <View style={styles.progressHeader}>
@@ -169,15 +209,15 @@ const GetStarted = () => {
                                 key={index}
                                 style={[
                                     styles.optionButton,
-                                    answers[currentQuestion.id] === option
+                                    answers[currentQuestion.title] === option
                                         ? styles.optionButtonSelected
                                         : styles.optionButtonDefault
                                 ]}
-                                onPress={() => handleAnswerSelect(currentQuestion.id, option)}
+                                onPress={() => handleAnswerSelect(currentQuestion.id, currentQuestion?.title, option)}
                             >
                                 <Text style={[
                                     styles.optionText,
-                                    answers[currentQuestion.id] === option
+                                    answers[currentQuestion.title] === option
                                         ? styles.optionTextSelected
                                         : styles.optionTextDefault
                                 ]}>
@@ -227,12 +267,12 @@ const GetStarted = () => {
         );
     };
 
-    const renderCompleteScreen = () => (
+    const RenderCompleteScreen: React.FC = () => (
         <SafeAreaView style={styles.completeContainer}>
-            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
             <View style={styles.completeContent}>
                 <View style={styles.completeIcon}>
-                    <Text style={styles.completeIconText}>✓</Text>
+                    <Text style={styles.completeIconText}><Ionicons name="checkmark-outline" size={30} /></Text>
+                    {/* <Text style={styles.completeIconText}>✓</Text> */}
                 </View>
 
                 <Text style={styles.completeTitle}>
@@ -258,21 +298,21 @@ const GetStarted = () => {
     // Main render logic
     switch (currentScreen) {
         // case 'start':
-        //     return renderStartScreen();
+        //     return <RenderStartScreen />;
         // case 'onboarding':
         //     return renderOnboardingScreen();
         case 'questionnaire':
-            return renderQuestionnaireScreen();
+            return <RenderQuestionnaireScreen />;
         case 'complete':
-            return renderCompleteScreen();
+            return <RenderCompleteScreen />;
         case 'createAccount':
-            return <CreateAccount />
+            return <CreateAccount answers={answers} />
         default:
-            return renderQuestionnaireScreen();
+            return <RenderQuestionnaireScreen />;
     }
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     // Start Screen Styles
     startContainer: {
         flex: 1,
@@ -320,7 +360,7 @@ const styles = StyleSheet.create({
     // Questionnaire Screen Styles
     questionnaireContainer: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.background,
     },
     progressContainer: {
         paddingHorizontal: 24,
@@ -333,22 +373,22 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     progressText: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         fontSize: 14,
     },
     progressPercentage: {
-        color: '#047857', // emerald-700
+        color: colors.primary, // emerald-700
         fontSize: 14,
         fontWeight: '600',
     },
     progressBarBackground: {
         width: '100%',
-        backgroundColor: '#e5e7eb', // gray-200
+        backgroundColor: colors.item, // gray-200
         borderRadius: 4,
         height: 8,
     },
     progressBarFill: {
-        backgroundColor: '#047857', // emerald-700
+        backgroundColor: colors.primary, // emerald-700
         height: 8,
         borderRadius: 4,
     },
@@ -362,11 +402,11 @@ const styles = StyleSheet.create({
     questionTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827', // gray-900
+        color: colors.text, // gray-900
         marginBottom: 16,
     },
     questionSubtitle: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         fontSize: 18,
         lineHeight: 28,
     },
@@ -380,29 +420,29 @@ const styles = StyleSheet.create({
         borderWidth: 2,
     },
     optionButtonSelected: {
-        borderColor: '#047857', // emerald-700
-        backgroundColor: '#ecfdf5', // emerald-50
+        borderColor: colors.primary, // emerald-700
+        backgroundColor: colors.item, // emerald-50
     },
     optionButtonDefault: {
-        borderColor: '#e5e7eb', // gray-200
-        backgroundColor: '#ffffff',
+        borderColor: colors.inputBorder, // gray-200
+        backgroundColor: colors.surface,
     },
     optionText: {
         fontSize: 16,
     },
     optionTextSelected: {
-        color: '#047857', // emerald-700
+        color: colors.primary, // emerald-700
         fontWeight: '600',
     },
     optionTextDefault: {
-        color: '#374151', // gray-700
+        color: colors.textTertiary, // gray-700
     },
     bottomNavigation: {
         paddingHorizontal: 24,
         paddingVertical: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.background,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb', // gray-200
+        borderTopColor: colors.border, // gray-200
     },
     bottomNavigationContent: {
         flexDirection: 'row',
@@ -414,7 +454,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
     },
     backButtonText: {
-        color: '#4b5563', // gray-600
+        color: colors.text, // gray-600
         fontSize: 16,
     },
     nextButton: {
@@ -423,10 +463,10 @@ const styles = StyleSheet.create({
         borderRadius: 25,
     },
     nextButtonEnabled: {
-        backgroundColor: '#047857', // emerald-700
+        backgroundColor: colors.primary, // emerald-700
     },
     nextButtonDisabled: {
-        backgroundColor: '#d1d5db', // gray-300
+        backgroundColor: colors.textTertiary, // gray-300
     },
     nextButtonText: {
         fontSize: 16,
@@ -436,13 +476,13 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     nextButtonTextDisabled: {
-        color: '#6b7280', // gray-500
+        color: colors.textSecondary, // gray-500
     },
 
     // Complete Screen Styles
     completeContainer: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.background,
     },
     completeContent: {
         flex: 1,
@@ -451,9 +491,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
     },
     completeIcon: {
-        width: 80,
-        height: 80,
-        backgroundColor: '#047857', // emerald-700
+        width: 50,
+        height: 50,
+        backgroundColor: colors.primary, // emerald-700
         borderRadius: 40,
         justifyContent: 'center',
         alignItems: 'center',
@@ -466,18 +506,18 @@ const styles = StyleSheet.create({
     completeTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827', // gray-900
+        color: colors.text, // gray-900
         marginBottom: 16,
         textAlign: 'center',
     },
     completeDescription: {
-        color: '#4b5563', // gray-600
+        color: colors.textTertiary, // gray-600
         textAlign: 'center',
         fontSize: 18,
         marginBottom: 32,
     },
     completeGetStartedButton: {
-        backgroundColor: '#047857', // emerald-700
+        backgroundColor: colors.primary, // emerald-700
         borderRadius: 25,
         paddingHorizontal: 48,
         paddingVertical: 16,

@@ -1,6 +1,7 @@
+import { Colors } from "@/constants/Colors";
 import { NOTE_TYPES, PatientNote } from "@/types";
 import React, { Dispatch, SetStateAction } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export interface noteFormProps {
@@ -24,6 +25,9 @@ const AddNotesModal: React.FC<AddNotesModalProps> = ({
     setNoteForm,
     saveNote
 }) => {
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     return (
         <Modal
             visible={isAddNoteModalVisible}
@@ -75,7 +79,7 @@ const AddNotesModal: React.FC<AddNotesModalProps> = ({
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Content *</Text>
+                        <Text style={styles.inputLabel}>Content <Text style={styles.required}>*</Text></Text>
                         <TextInput
                             style={[styles.textInput, styles.textArea]}
                             value={noteForm.content}
@@ -83,9 +87,11 @@ const AddNotesModal: React.FC<AddNotesModalProps> = ({
                             placeholder="Enter note content..."
                             multiline
                             numberOfLines={6}
+                            maxLength={150}
                             autoFocus
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={colors.placeholder}
                         />
+                        <Text style={styles.charCount}>{noteForm.content.length}/280</Text>
                     </View>
 
                     <TouchableOpacity
@@ -107,10 +113,10 @@ const AddNotesModal: React.FC<AddNotesModalProps> = ({
     )
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     modalContainer: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: colors.background,
     },
     modalHeader: {
         flexDirection: 'row',
@@ -119,25 +125,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9ecef',
+        borderBottomColor: colors.divider,
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
     },
     cancelButton: {
         paddingVertical: 8,
     },
     cancelButtonText: {
-        color: '#4CAF50',
+        color: colors.textSecondary,
         fontSize: 16,
     },
     saveButton: {
         paddingVertical: 8,
     },
     saveButtonText: {
-        color: '#4CAF50',
+        color: colors.primary,
         fontSize: 16,
         fontWeight: '600',
     },
@@ -152,20 +158,29 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2d4150',
+        color: colors.text,
         marginBottom: 8,
     },
     textInput: {
         borderWidth: 1,
-        borderColor: '#dee2e6',
+        borderColor: colors.inputBorder,
         borderRadius: 8,
         padding: 12,
         fontSize: 16,
-        backgroundColor: '#fff',
+        backgroundColor: colors.inputBackground,
+    },
+    required: {
+        color: '#ef4444'
     },
     textArea: {
         height: 120,
         textAlignVertical: 'top',
+    },
+    charCount: {
+        fontSize: 12,
+        color: colors.textTertiary,
+        textAlign: 'right',
+        marginTop: 4,
     },
     typeContainer: {
         flexDirection: 'row',
@@ -175,15 +190,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 16,
-        backgroundColor: '#e9ecef',
+        backgroundColor: colors.surface,
         marginRight: 8,
     },
     typeButtonSelected: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
     },
     typeButtonText: {
         fontSize: 12,
-        color: '#495057',
+        color: colors.textTertiary,
         fontWeight: '500',
     },
     typeButtonTextSelected: {
@@ -198,15 +213,15 @@ const styles = StyleSheet.create({
         width: 20,
         height: 20,
         borderWidth: 2,
-        borderColor: '#dee2e6',
+        borderColor: colors.inputBorder,
         borderRadius: 4,
         marginRight: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
     checkboxChecked: {
-        backgroundColor: '#4CAF50',
-        borderColor: '#4CAF50',
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     checkmark: {
         color: '#fff',
@@ -215,7 +230,7 @@ const styles = StyleSheet.create({
     },
     checkboxLabel: {
         fontSize: 14,
-        color: '#2d4150',
+        color: colors.text,
     },
 })
 

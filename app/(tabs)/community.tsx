@@ -3,6 +3,7 @@ import Avatar from '@/components/Avatar';
 import CategoryList from '@/components/CategoryList';
 import CreatePostModal from '@/components/CreatePostModal';
 import ErrorMessage from '@/components/ErrorMessage';
+import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetAll, useRpc } from '@/hooks/useCrud';
 import { capitalizeFirstLetter, formatNumber, formatThreadTime } from '@/utils';
@@ -13,10 +14,10 @@ import React, { useMemo, useRef, useState } from 'react';
 import {
     FlatList,
     RefreshControl,
-    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
+    useColorScheme,
     View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -130,6 +131,9 @@ const Community: React.FC<CommunityProps> = () => {
     const [showGuidelines, setShowGuidelines] = useState<boolean>(false);
     const flatListRef = useRef<FlatList>(null);
     const [refreshing, setRefreshing] = useState(false);
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
     const router = useRouter()
     const { session } = useCheckAuth()
     const userId = session?.user?.id!
@@ -262,7 +266,7 @@ const Community: React.FC<CommunityProps> = () => {
                 </View>
             </View>
 
-            <Text style={styles.discussionTitle}>{item.title}</Text>
+            {item.title && <Text style={styles.discussionTitle}>{item.title}</Text>}
             {/* <Text style={styles.discussionContent} numberOfLines={2}> */}
             <Text style={styles.discussionContent} >
                 {item.content}
@@ -380,7 +384,6 @@ const Community: React.FC<CommunityProps> = () => {
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <StatusBar barStyle="dark-content" backgroundColor="#fff" />
             <TouchableOpacity
                 style={styles.createPostBtn}
                 onPress={() => setIsCreatePostOpen(true)}
@@ -397,7 +400,7 @@ const Community: React.FC<CommunityProps> = () => {
                         style={styles.filterBtn}
                         onPress={() => setShowCategories(!showCategories)}
                     >
-                        <Ionicons name="funnel-outline" size={24} color="#6b7280" />
+                        <Ionicons name="funnel-outline" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                     {/* <TouchableOpacity
                         style={styles.createPostBtn}
@@ -450,10 +453,10 @@ const Community: React.FC<CommunityProps> = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         position: 'relative'
     },
     header: {
@@ -474,7 +477,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#2d3748',
+        color: colors.text,
     },
     headerActions: {
         flexDirection: 'row',
@@ -483,7 +486,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     createPostBtn: {
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.primary,
         // paddingHorizontal: 16,
         // paddingVertical: 8,
         padding: 16,
@@ -550,7 +553,7 @@ const styles = StyleSheet.create({
     discussionCount: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.text,
     },
     statsToggle: {
         flexDirection: 'row',
@@ -560,7 +563,7 @@ const styles = StyleSheet.create({
     },
     statsToggleText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     featuredSection: {
@@ -594,7 +597,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     discussionCard: {
-        backgroundColor: 'white',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -603,7 +606,7 @@ const styles = StyleSheet.create({
         // shadowOffset: { width: 0, height: 1 },
         // shadowOpacity: 0.1,
         // shadowRadius: 3,
-        borderColor: "#DEE2E6",
+        borderColor: colors.border,
         borderWidth: 1,
     },
     discussionHeader: {
@@ -621,11 +624,11 @@ const styles = StyleSheet.create({
     authorName: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.text,
     },
     timestamp: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     categoryBadge: {
@@ -638,13 +641,13 @@ const styles = StyleSheet.create({
     discussionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2d3748',
+        color: colors.text,
         marginBottom: 8,
         lineHeight: 22,
     },
     discussionContent: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 20,
         marginBottom: 12,
     },
@@ -664,7 +667,7 @@ const styles = StyleSheet.create({
     },
     statText: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     urgentBadge: {

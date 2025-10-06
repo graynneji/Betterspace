@@ -1,14 +1,18 @@
+import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { useColorScheme } from "react-native";
 
 const MessageStatusIcon = ({ status }: { status?: 'sending' | 'sent' | 'delivered' | 'read' }) => {
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
     if (!status || status === 'sending') {
         return (
             <Ionicons
                 name="time-outline"
                 size={14}
-                color="rgba(255, 255, 255, 0.7)"
-                style={{ marginLeft: 4 }}
+                color={colors.text}
+                style={{ marginLeft: 4, alignSelf: 'flex-end' }}
             />
         );
     }
@@ -18,8 +22,8 @@ const MessageStatusIcon = ({ status }: { status?: 'sending' | 'sent' | 'delivere
             <Ionicons
                 name="checkmark"
                 size={14}
-                color="rgba(255, 255, 255, 0.7)"
-                style={{ marginLeft: 4 }}
+                color={colors.text}
+                style={{ marginLeft: 4, alignSelf: 'flex-end' }}
             />
         );
     }
@@ -29,7 +33,7 @@ const MessageStatusIcon = ({ status }: { status?: 'sending' | 'sent' | 'delivere
             <Ionicons
                 name="checkmark-done"
                 size={14}
-                color='#000000'
+                color={colors.text}
                 // color={status === 'read' ? "#4CAF50" : "rgba(255, 255, 255, 0.7)"}
                 style={{ marginLeft: 4, alignSelf: 'flex-end' }}
             />
@@ -42,7 +46,7 @@ const MessageStatusIcon = ({ status }: { status?: 'sending' | 'sent' | 'delivere
                 name="alert-circle-outline"
                 size={14}
                 color="#f44336"
-                style={{ marginLeft: 4 }}
+                style={{ marginLeft: 4, alignSelf: 'flex-end' }}
             />
         );
     }
