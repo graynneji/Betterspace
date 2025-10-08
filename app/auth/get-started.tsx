@@ -1,7 +1,7 @@
 import CreateAccount from "@/components/CreateAccount";
 import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ const GetStarted = () => {
     const colors = Colors[colorScheme ?? 'light'];
     const styles = createStyles(colors);
     const navigation = useNavigation()
+    const router = useRouter()
     useEffect(() => {
         navigation.setOptions({
             headerShown: false,
@@ -234,11 +235,12 @@ const GetStarted = () => {
                         <TouchableOpacity
                             style={styles.backButton}
                             onPress={() => {
-                                if (currentQuestionIndex > 0) {
-                                    setCurrentQuestionIndex(currentQuestionIndex - 1);
-                                } else {
-                                    setCurrentScreen('onboarding');
-                                }
+                                // if (currentQuestionIndex > 0) {
+                                //     setCurrentQuestionIndex(currentQuestionIndex - 1);
+                                // } else {
+                                //     setCurrentScreen('onboarding');
+                                // }
+                                router.replace("/auth/verify-email-screen")
                             }}
                         >
                             <Text style={styles.backButtonText}>

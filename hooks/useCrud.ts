@@ -16,12 +16,10 @@ export function useCrudCreate<T>(
     mutationFn: (payload: Partial<T>) => crudService.create(table, payload),
     onSuccess: () => {
       if (Array.isArray(invalidateKeys?.[0])) {
-        // case: multiple keys
         (invalidateKeys as any[][]).forEach((key) => {
           queryClient.invalidateQueries({ queryKey: key });
         });
       } else {
-        // case: single key
         queryClient.invalidateQueries({
           queryKey: (invalidateKeys as any[]) ?? [table],
         });
@@ -33,7 +31,8 @@ export function useCrudCreate<T>(
 export function useGetAll(
   table: string,
   options?: { orderBy?: string; ascending?: boolean },
-  column: string = "*"
+  column: string = "*",
+  shouldRetry: boolean = false
 ) {
   return useQuery({
     queryKey: [table, JSON.stringify(options), column],
@@ -41,7 +40,7 @@ export function useGetAll(
       const [table, options, column] = queryKey as [string, string, string];
       return await crudService.read(table, JSON.parse(options), column);
     },
-    retry: false,
+    retry: shouldRetry ? 3 : false,
   });
 }
 
@@ -50,7 +49,7 @@ export function useGetById<T>(
   filters: Partial<T>,
   column: string,
   enabled: boolean = true,
-  options?: ReadOptions // ✅ Add this
+  options?: ReadOptions
 ) {
   return useQuery({
     queryKey: [table, JSON.stringify(filters), column, JSON.stringify(options)],
@@ -82,31 +81,14 @@ export function useUpdate<T>(table: string, id: string, invalidateKey?: any[]) {
   });
 }
 
-// function deleteUser() {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: (id: string) => crudService.deleteUser(id),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["users"] });
-//     },
-//   });
-// }
-
-// 🔹 Example for posts
-// function createPost() {
-//   const queryClient = useQueryClient();
-
-//   const {data, error, loading} = useMutation({
-//     mutationFn: (values: { title: string; content: string; user_id: string }) =>
-//       crudService.createPost(values),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: ["posts"] });
-//     },
-//   });
-
-//   return { useGetById, create };
-// }
+export function useDelete() {
+  return useMutation({
+    mutationFn: (id: string) => crudService.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
 
 export function useRpc<T>(fn: string, invalidateKey?: any[]) {
   return useMutation({

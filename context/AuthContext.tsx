@@ -14,7 +14,7 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
-  register: (email: string, password: string) => Promise<void>;
+  register: <T>(fullName: string, email: string, password: string, others: Partial<T>) => Promise<{ data: { user: any | null; session: Session | null; } | { user: null; session: null; }; error: any | null; }>;
   logout: () => Promise<void>;
 };
 
@@ -27,9 +27,12 @@ interface DataUser {
 const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
-  login: async () => { },
-  register: async () => { },
-  logout: async () => { },
+  login: async () => Promise.resolve({}),
+  register: async () => Promise.resolve({
+    data: { user: null, session: null },
+    error: null
+  }),
+  logout: async () => Promise.resolve(),
 });
 
 
@@ -98,10 +101,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  async function register<T>(fullName: string, email: string, password: string, others: Partial<T>) {
     setLoading(true);
     try {
-      await authService.register(email, password);
+      const result = await authService.register(email, password, others);
+      const data = result?.data ?? { user: null, session: null };
+      const error = result?.error ?? null;
+      return { data, error }
     } finally {
       setLoading(false);
     }

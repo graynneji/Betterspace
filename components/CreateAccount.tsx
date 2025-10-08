@@ -1,23 +1,33 @@
+import { CrudAdapter } from '@/adapter/crudAdapter';
 import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
+import { useCrudCreate } from '@/hooks/useCrud';
 import { signUpschema } from '@/lib/validationSchema';
+import { CrudService } from '@/services/crudService';
+import { Client } from '@/utils/client';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import React, { useEffect, useState } from 'react';
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 // type QuestionnaireAnswers = Record<string, string>;
 
+
 interface QuestionAireAnswersProps {
     answers: Record<string, string>;
 }
-
+const client = new Client();
+const crudAdapter = new CrudAdapter(client);
+const crudService = new CrudService(crudAdapter);
 const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const styles = createStyles(colors);
     const navigation = useNavigation();
     const { register } = useCheckAuth()
+    const signUpMutation = useCrudCreate("user")
+    const patientMutation = useCrudCreate("patient")
+    const router = useRouter()
 
     useEffect(() => {
         navigation.setOptions({
@@ -26,22 +36,26 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
     }, []);
 
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
+        fullName: '',
+        // lastName: '',
         email: '',
-        password: '',
-        confirmPassword: '',
-        licenseNumber: '',
         phone: '',
+        password: '',
+        // confirmPassword: '',
+        // licenseNumber: '',
     });
 
+    const others = {
+        full_name: formData.fullName,
+        designation: 'patient'
+    }
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isLoading, setIsLoading] = useState(false);
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
-            [field]: value
+            [field]: value.toString()
         }));
         // Clear error when user starts typing
         if (errors[field]) {
@@ -52,83 +66,71 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
         }
     };
 
-    // const validateForm = () => {
-    //     const newErrors: Record<string, string> = {};
 
-    //     if (!formData.firstName.trim()) {
-    //         newErrors.firstName = 'First name is required';
-    //     }
-
-    //     if (!formData.lastName.trim()) {
-    //         newErrors.lastName = 'Last name is required';
-    //     }
-
-    //     if (!formData.email.trim()) {
-    //         newErrors.email = 'Email is required';
-    //     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-    //         newErrors.email = 'Please enter a valid email address';
-    //     }
-
-    //     if (!formData.password) {
-    //         newErrors.password = 'Password is required';
-    //     } else if (formData.password.length < 8) {
-    //         newErrors.password = 'Password must be at least 8 characters';
-    //     }
-
-    //     if (!formData.confirmPassword) {
-    //         newErrors.confirmPassword = 'Please confirm your password';
-    //     } else if (formData.password !== formData.confirmPassword) {
-    //         newErrors.confirmPassword = 'Passwords do not match';
-    //     }
-
-    //     if (!formData.licenseNumber.trim()) {
-    //         newErrors.licenseNumber = 'License number is required';
-    //     }
-
-    //     if (!formData.phone.trim()) {
-    //         newErrors.phone = 'Phone number is required';
-    //     }
-
-    //     setErrors(newErrors);
-    //     return Object.keys(newErrors).length === 0;
-    // };
 
     const handleCreateAccount = async () => {
+        console.log(formData.fullName, formData.email, formData.password, others, "form fileds")
         // if (!validateForm()) {
         //     return;
         // }
         const validationSchema = signUpschema.safeParse({
             email: formData.email,
-            password: formData.password
+            password: formData.password,
+            fullName: formData.fullName,
+            phone: formData.password?.toString()
+
         })
         if (!validationSchema.success) {
             return new Promise((resolve, reject) => {
                 Alert.alert("Something went wrong", validationSchema.error.issues[0].message, [
-                    { text: "Cancel", style: "cancel", onPress: () => reject(validationSchema.error.issues[0].message) },
+                    { text: "Cancel", style: "cancel", onPress: () => { return } },
                 ]);
             });
         }
 
         setIsLoading(true);
         try {
-            // Simulate API call
-            // await new Promise(resolve => setTimeout(resolve, 2000));
-            // await register()
-            //check 
-            //             const { data: therapists, error: therapistError } = await supabase
-            //   .from("therapist")
-            //   .select("id");
+            const { data: signUpData, error } = await register(formData.fullName, formData.email, formData.password, others)
+            // const response = await fetch(`http://www.geoplugin.net/json.gp`);
+            // if (!response.ok) throw new Error("unable to create account at the moment")
+            // const location = await response.json()
+            console.log(signUpData, "location")
 
-            // if (therapistError || !therapists?.length) {
-            //   return { error: "No therapists available" };
-            // }
+            // const { data: fetchTherapistData, isLoading, error: fetchTherapistError, refetch } = useGetAll('therapist', {}, "id", true)
+            const fetchTherapistData = await crudService.read('therapist', {}, 'id');
+            const therapistIds = (fetchTherapistData?.result ?? []).map((t) => t.id);
+            const randomTherapistId =
+                therapistIds.length > 0
+                    ? therapistIds[Math.floor(Math.random() * therapistIds.length)]
+                    : null;
+            const userData = {
+                user_id: signUpData?.user?.id,
+                name: formData.fullName,
+                phone: formData.phone.toString(),
+                email: formData.email,
+                // role: options ? selectedQuesAnswers : undefined,
+                // selected: !options ? JSON.stringify(selectedQuesAnswers) : undefined,
+                selected: answers,
+                therapist_id: randomTherapistId,
+                // ip: location.geoplugin_request,
+                // city: location.geoplugin_city,
+                // region: location.geoplugin_region,
+                // country: location.geoplugin_countryName,
+            };
 
-            // const therapistIds = therapists.map((t) => t.id);
-            // const randomTherapistId = therapistIds[Math.floor(Math.random() * therapistIds.length)];
+            const result = await signUpMutation.mutateAsync(userData);
 
-            // therapistId = randomTherapistId;
-            // Handle successful account creation
-            console.log('Account created:', formData);
+            if (result.error) throw new Error(result.error.message);
+            const therapist = await patientMutation.mutateAsync({
+                patient_id: signUpData.user.id,
+                therapist: randomTherapistId,
+                name: formData.fullName,
+                email: formData.email,
+                selected: answers,
+            })
+
+            if (therapist.error) throw new Error(therapist.error.message);
+
             Alert.alert(
                 'Success',
                 'Account created successfully! Please check your email for verification.',
@@ -137,7 +139,7 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
                         text: 'OK',
                         onPress: () => {
                             // Navigate to sign in or verification screen
-                            // navigation.navigate('SignIn');
+                            router.replace('/auth/verify');
                         }
                     }
                 ]
@@ -204,7 +206,7 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
                         </View>
 
                         <View style={styles.form}>
-                            {renderInputField('First Name', 'firstName', 'Enter your first name', 'person-outline')}
+                            {renderInputField('Full Name', 'fullName', 'Enter your first name', 'person-outline')}
                             {renderInputField('Email Address', 'email', 'Enter your email address', 'mail-outline', false, 'email-address')}
                             {renderInputField('Phone Number', 'phone', 'Enter your phone number', 'call-outline', false, 'phone-pad')}
                             {renderInputField('Password', 'password', 'Create a password', 'lock-closed-outline', true)}

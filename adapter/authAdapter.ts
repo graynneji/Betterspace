@@ -28,11 +28,15 @@ export class AuthAdapter {
     });
     return { data, error };
   }
-  async signUp(email: string, password: string) {
+  async signUp<T>(email: string, password: string, others: Partial<T>) {
     const { data, error } = await this.client.supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: others,
+      },
     });
+    console.log(data, error, "checking the logs from adapter");
     return { data, error };
   }
   async getUser() {

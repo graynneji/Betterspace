@@ -261,9 +261,6 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* <StatusBar barStyle="dark-content" /> */}
-      {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
-
       {/* Header */}
       <View style={styles.header}>
         {
@@ -271,8 +268,6 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
             <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
           </TouchableOpacity>)
         }
-
-
         <TouchableOpacity
           style={styles.therapistInfo}
           onPress={() => setShowTherapistBio(true)}

@@ -8,22 +8,27 @@ import Toast from "react-native-toast-message";
 export class AuthService {
   constructor(private authAdapter: AuthAdapter) {}
 
-  async register(email: string, password: string) {
-    const { data, error } = await this.authAdapter.signUp(email, password);
+  async register<T>(email: string, password: string, others: Partial<T>) {
+    const { data, error } = await this.authAdapter.signUp(
+      email,
+      password,
+      others
+    );
     if (error) {
       Toast.show({
         type: "error",
         text1: "Registration Failed",
         text2: error.message,
       });
-      throw new Error(error.message);
+      return;
     }
-    if (!data?.session)
+    if (data?.session)
       Toast.show({
         type: "info",
         text1: "Check your email",
         text2: "Please verify your email to continue.",
       });
+    return { data, error };
   }
   async login(email: string, password: string) {
     const { data, error } = await this.authAdapter.signIn(email, password);

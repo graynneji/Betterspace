@@ -331,7 +331,7 @@ const SignIn = () => {
                         <View style={styles.createAccountContainer}>
                             <Text style={styles.createAccountText}>
                                 <Text>Don&apos;t have an account?{' '}</Text>
-                                <TouchableOpacity onPress={() => router.replace("auth/signin")}>
+                                <TouchableOpacity onPress={() => router.replace("auth/get-started")}>
                                     <Text style={styles.createAccountLink}>Create Account</Text>
                                 </TouchableOpacity>
                             </Text>

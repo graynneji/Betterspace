@@ -17,7 +17,6 @@ import {
     useColorScheme,
     View,
 } from 'react-native';
-import Toast from 'react-native-toast-message';
 
 interface newPost {
     title: string;
@@ -53,7 +52,8 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
         is_anonymous: false,
         author_id: session?.user?.id!,
         author: session?.user?.user_metadata?.full_name! || "Betterspace User",
-        tags: ''
+        tags: '',
+        profile_picture: session?.user?.user_metadata?.profile_picture
     }
 
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -76,25 +76,25 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({ visible, onClose, cat
             if (result.error) {
                 throw new Error(result.error.message || 'Failed to create post.');
             }
-            // Alert.alert('Post Created', 'Your post has been shared with the community.', [{ text: 'OK' }]);
-            Toast.show({
-                type: "success",
-                text1: "Post Created",
-                text2: "Your post has been shared with the community.",
-                visibilityTime: 2000,
-                autoHide: true,
-                topOffset: 60,
-            });
+            Alert.alert('Post Created', 'Your post has been shared with the community.', [{ text: 'OK' }]);
+            // Toast.show({
+            //     type: "success",
+            //     text1: "Post Created",
+            //     text2: "Your post has been shared with the community.",
+            //     visibilityTime: 2000,
+            //     autoHide: true,
+            //     topOffset: 60,
+            // });
 
             setNewPost(initialPost);
             onClose(); // ✅ now only closes *after* the insert succeeds
         } catch (error) {
-            // Alert.alert('Error', (error as Error).message || 'Failed to create post.');
-            Toast.show({
-                type: "Error",
-                text1: (error as Error).message || 'Failed to create post'
-                // text2: "Your post has been shared with the community.",
-            });
+            Alert.alert('Error', (error as Error).message || 'Failed to create post.');
+            // Toast.show({
+            //     type: "Error",
+            //     // text1: (error as Error).message || 'Failed to create post'
+            //     text2: "Your post has been shared with the community.",
+            // });
         } finally {
             setIsSubmitting(false);
         }

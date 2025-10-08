@@ -108,6 +108,7 @@ const More: React.FC = () => {
 
     const signOut = async () => {
         await logout()
+        //work make home "/" TODO
         router.replace('/auth/signin')
     }
 

@@ -616,7 +616,7 @@ const Schedule: React.FC = () => {
                             <View style={styles.pickerHeader}>
                                 <Text style={styles.pickerTitle}>Select Patient</Text>
                                 <TouchableOpacity onPress={() => setShowPatientPicker(false)}>
-                                    <Ionicons name="close-circle" size={28} color="#6c757d" />
+                                    <Ionicons name="close-circle" size={28} color={colors.textSecondary} />
                                 </TouchableOpacity>
                             </View>
 
@@ -669,7 +669,7 @@ const Schedule: React.FC = () => {
                                                     {capitalizeFirstLetter(patient?.name)}
                                                 </Text>
                                                 <View style={styles.patientIdContainer}>
-                                                    <Ionicons name="card-outline" size={12} color="#6c757d" />
+                                                    <Ionicons name="card-outline" size={12} color={colors.textSecondary} />
                                                     <Text style={styles.patientIdText}>
                                                         ID: {generatePatientId(patient?.created_at, patient?.id)}
                                                     </Text>

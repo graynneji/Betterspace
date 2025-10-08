@@ -21,14 +21,18 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  async function register<T>(
+    email: string,
+    password: string,
+    others: Partial<T>
+  ) {
     setLoading(true);
     try {
-      await authService.register(email, password);
+      await authService.register(email, password, others);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const logout = async () => {
     setLoading(true);

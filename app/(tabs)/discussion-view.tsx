@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router/build/hooks';
 import React, { useEffect, useState } from 'react';
 import {
+    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -17,7 +18,8 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Avatar from '../../components/Avatar';
+// import Avatar from '../../components/Avatar';
+import { useCheckAuth } from '@/context/AuthContext';
 import { categories, Discussion, getCategoryColor, getCategoryIcon } from './community';
 
 
@@ -43,6 +45,7 @@ export interface Comment {
     user_id: string;
     article_likes: LikesProps[];
     article_id: string;
+    profile_picture?: string
 }
 
 // interface Discussion {
@@ -98,6 +101,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     // console.log(discussion, "comments")
     const [comments, setComments] = useState<Comment[]>(discussion?.article_comments || []);
     const [newComment, setNewComment] = useState<string>('');
+    const { session } = useCheckAuth()
     // const [discussion, setDiscussion] = useState()
     // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
     // const [likes, setLikes] = useState<number>(discussion.likes || 0);
@@ -219,6 +223,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                 author: params?.fullName,
                 // author: session?.user?.user_metadata?.full_name,
                 article_id: discussion.id,
+                profile_picture: session?.user?.user_metadata?.profile_picture
 
             };
             await createCommentMutation.mutateAsync(comment)
@@ -243,13 +248,22 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
     //     };
 
     const renderComment = (comment: Comment) => (
-        <View key={comment.id} style={styles.commentCard}>
+        <View key={comment.id} style={styles.commentCard} >
             <View style={styles.commentHeader}>
                 {/* <Image
                     source={{ uri: comment.author.avatar }}
                     style={styles.commentAvatar}
                 /> */}
-                <Avatar annoymous={false} author={comment.author} />
+                {/* <Avatar annoymous={false} author={comment.author} /> */}
+                {comment?.profile_picture ? <Image
+                    source={{ uri: comment?.profile_picture || 'https://via.placeholder.com/40' }}
+                    style={styles.authorAvatar}
+                /> :
+                    <View style={styles.avatar}>
+                        <Text style={styles.avatarText}>
+                            {comment?.author.charAt(0).toUpperCase() || "A"}
+                        </Text>
+                    </View>}
                 <View style={styles.commentAuthorInfo}>
                     <Text style={styles.commentAuthorName}>{capitalizeFirstLetter(comment.author)}</Text>
                     <Text style={styles.commentTime}>{formatTime(comment.created_at)}</Text>
@@ -269,7 +283,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
             </View>
 
             <Text style={styles.commentContent}>{comment.content}</Text>
-        </View>
+        </View >
     );
 
     return (
@@ -300,16 +314,16 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         {/* Author Info */}
                         <View style={styles.discussionHeader}>
                             <View style={styles.authorInfo}>
-                                {/* <Image
-                                source={{ uri: discussion.author?.avatar || 'https://via.placeholder.com/40' }}
-                                style={styles.authorAvatar}
-                            /> */}
-                                <Avatar annoymous={discussion?.is_anonymous} author={discussion.author} />
-                                {/* <View style={styles.avatar}>
-                                <Text style={styles.avatarText}>
-                                    {!discussion?.is_annoymous ? discussion.author.charAt(0).toUpperCase() : "A"}
-                                </Text>
-                            </View> */}
+                                {/* <Avatar annoymous={discussion?.is_anonymous} author={discussion.author} picture={discussion?.profile_picture} /> */}
+                                {discussion?.profile_picture ? <Image
+                                    source={{ uri: discussion?.profile_picture || 'https://via.placeholder.com/40' }}
+                                    style={styles.authorAvatar}
+                                /> :
+                                    <View style={styles.avatar}>
+                                        <Text style={styles.avatarText}>
+                                            {!discussion?.is_anonymous ? discussion.author.charAt(0).toUpperCase() : "A"}
+                                        </Text>
+                                    </View>}
                                 <View style={styles.authorDetails}>
                                     <Text style={styles.authorName}>{capitalizeFirstLetter(discussion.author)}</Text>
                                     <Text style={styles.postTime}>{formatTime(discussion.created_at)}</Text>
@@ -336,7 +350,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         </View>
 
                         {/* Title */}
-                        <Text style={styles.discussionTitle}>{discussion.title}</Text>
+                        {discussion?.title && <Text style={styles.discussionTitle}>{discussion.title}</Text>}
 
                         {/* Content */}
                         <Text style={styles.discussionContent}>{discussion.content}</Text>

@@ -1,8 +1,10 @@
 
 
+import { Colors } from "@/constants/Colors";
 import { TherapistData } from "@/types";
+import { Ionicons } from "@expo/vector-icons";
 import React, { Dispatch, SetStateAction, useState } from "react";
-import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useColorScheme, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BankDetails {
@@ -52,6 +54,9 @@ const EarningModal: React.FC<EarningProps> = ({
     const [payoutAmount, setPayoutAmount] = useState<string>('');
     const [selectedBankForPayout, setSelectedBankForPayout] = useState<string>('');
     const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
+    const colorScheme = useColorScheme();
+    const colors = Colors[colorScheme ?? 'light'];
+    const styles = createStyles(colors);
 
     const addBankAccount = () => {
         if (!newBankDetails.bankName.trim() || !newBankDetails.accountName.trim() ||
@@ -144,9 +149,10 @@ const EarningModal: React.FC<EarningProps> = ({
                     <Text style={styles.headerTitle}>Earnings</Text>
                     <TouchableOpacity
                         onPress={() => setIsEarningsModalVisible(false)}
-                        style={styles.closeButton}
+                    // style={styles.closeButton}
                     >
-                        <Text style={styles.closeButtonText}>✕</Text>
+                        {/* <Text style={styles.closeButtonText}>✕</Text> */}
+                        <Ionicons name="close-circle" size={28} color={colors.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
@@ -313,7 +319,7 @@ const EarningModal: React.FC<EarningProps> = ({
                                         value={newBankDetails.routingNumber}
                                         onChangeText={(text) => setNewBankDetails(prev => ({ ...prev, routingNumber: text }))}
                                         placeholder="9-digit routing number"
-                                        placeholderTextColor="#9CA3AF"
+                                        placeholderTextColor={colors.placeholder}
                                         keyboardType="numeric"
                                     />
                                 </View>
@@ -497,10 +503,10 @@ const EarningModal: React.FC<EarningProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F9FAFB',
+        backgroundColor: colors.background,
     },
     header: {
         flexDirection: 'row',
@@ -508,32 +514,32 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 16,
-        backgroundColor: '#FFFFFF',
+        // backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#F3F4F6',
+        borderBottomColor: colors.divider,
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
         letterSpacing: -0.5,
     },
-    closeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F3F4F6',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    closeButtonText: {
-        fontSize: 18,
-        color: '#6B7280',
-        fontWeight: '600',
-    },
+    // closeButton: {
+    //     width: 32,
+    //     height: 32,
+    //     borderRadius: 16,
+    //     backgroundColor: '#F3F4F6',
+    //     alignItems: 'center',
+    //     justifyContent: 'center',
+    // },
+    // closeButtonText: {
+    //     fontSize: 18,
+    //     color: colors.textSecondary,
+    //     fontWeight: '600',
+    // },
     tabContainer: {
         flexDirection: 'row',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         paddingHorizontal: 16,
         paddingTop: 12,
         gap: 8,
@@ -551,7 +557,7 @@ const styles = StyleSheet.create({
     tabText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#9CA3AF',
+        color: colors.textTertiary,
     },
     tabTextActive: {
         color: '#6366F1',
@@ -640,7 +646,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         borderRadius: 12,
         padding: 16,
         marginBottom: 8,
@@ -667,12 +673,12 @@ const styles = StyleSheet.create({
     transactionTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 2,
     },
     transactionDate: {
         fontSize: 13,
-        color: '#9CA3AF',
+        color: colors.textTertiary,
     },
     transactionRight: {
         alignItems: 'flex-end',
@@ -680,7 +686,7 @@ const styles = StyleSheet.create({
     transactionAmount: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 4,
     },
     statusBadge: {
@@ -695,12 +701,12 @@ const styles = StyleSheet.create({
         textTransform: 'capitalize',
     },
     bankCard: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.surface,
         borderRadius: 16,
         padding: 20,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.border,
     },
     bankCardHeader: {
         flexDirection: 'row',
@@ -712,7 +718,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 10,
-        backgroundColor: '#F3F4F6',
+        backgroundColor: colors.background,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -734,24 +740,24 @@ const styles = StyleSheet.create({
     bankCardName: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#111827',
+        color: colors.text,
         marginBottom: 8,
     },
     bankCardNumber: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#6B7280',
+        color: colors.textSecondary,
         marginBottom: 12,
         letterSpacing: 1,
     },
     bankCardHolder: {
         fontSize: 13,
-        color: '#9CA3AF',
+        color: colors.placeholder,
         marginBottom: 4,
     },
     bankCardType: {
         fontSize: 12,
-        color: '#9CA3AF',
+        color: colors.placeholder,
         textTransform: 'capitalize',
     },
     inputContainer: {
@@ -760,17 +766,17 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.inputText,
         marginBottom: 8,
     },
     input: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.inputBackground,
         borderWidth: 1,
-        borderColor: '#E5E7EB',
+        borderColor: colors.inputBorder,
         borderRadius: 12,
         padding: 14,
         fontSize: 15,
-        color: '#111827',
+        color: colors.inputText,
     },
     accountTypeRow: {
         flexDirection: 'row',

@@ -12,7 +12,8 @@ import {
 interface Author {
     id: string;
     name: string;
-    avatar?: string;
+    profile_picture?: string;
+
 }
 
 interface Comment {
@@ -126,7 +127,7 @@ const Discussions: React.FC<DiscussionsProps> = ({
             <View style={styles.discussionHeader}>
                 <View style={styles.authorInfo}>
                     <Image
-                        source={{ uri: item.author.avatar || 'https://via.placeholder.com/32' }}
+                        source={{ uri: item.author.profile_picture || 'https://via.placeholder.com/32' }}
                         style={styles.avatar}
                     />
                     <View style={styles.authorDetails}>

@@ -974,7 +974,11 @@ const TherapistDashboard: React.FC = () => {
                                     <Text style={styles.retryText}>Retry</Text>
                                 </TouchableOpacity>
                             </View>
-                        ) : filteredPatients.map((patient: Patients) => (
+                        ) : filteredPatients.length === 0 ? <View style={styles.noPatients}>
+                            <Ionicons name="people-outline" size={32} color="#d1d5db" />
+                            <Text style={styles.noPatientsText}>No patient yet</Text>
+                            <Text style={styles.noPatientsSubtext}>You will be matched to a new patient to get started.</Text>
+                        </View> : filteredPatients.map((patient: Patients) => (
                             <TouchableOpacity
                                 key={patient.id}
                                 style={styles.patientCard}
@@ -1178,6 +1182,21 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     },
     retryText: {
         color: colors.primaryText,
+    },
+    noPatients: {
+        alignItems: 'center',
+        paddingVertical: 32,
+    },
+    noPatientsText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: colors.textSecondary,
+        marginTop: 12,
+    },
+    noPatientsSubtext: {
+        fontSize: 14,
+        color: colors.textTertiary,
+        marginTop: 4,
     },
     searchContainer: {
         paddingHorizontal: 16,

@@ -23,16 +23,12 @@ export class CrudAdapter {
   ) {
     let query = this.client.supabase.from(table).select(column);
 
-    // Apply ordering if specified
     if (options?.orderBy) {
       query = query.order(options.orderBy, {
         ascending: options.ascending ?? true,
       });
     }
 
-    // const { data, error } = await query;
-
-    // const result = data as T[];
     return query;
   }
 

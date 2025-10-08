@@ -1,5 +1,5 @@
 import { Comment, LikesProps } from '@/app/(tabs)/discussion-view';
-import Avatar from '@/components/Avatar';
+// import Avatar from '@/components/Avatar';
 import CategoryList from '@/components/CategoryList';
 import CreatePostModal from '@/components/CreatePostModal';
 import ErrorMessage from '@/components/ErrorMessage';
@@ -12,8 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useMemo, useRef, useState } from 'react';
 import {
-    FlatList,
-    RefreshControl,
+    FlatList, Image, RefreshControl,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -51,6 +50,7 @@ export interface Discussion {
     is_anonymous?: boolean;
     article_comments?: Comment[];
     article_likes?: LikesProps[];
+    profile_picture?: string
 }
 //     id: string;
 //     title: string;
@@ -233,7 +233,7 @@ const Community: React.FC<CommunityProps> = () => {
 
         const result = await rpcViewMutation.mutateAsync({ article_id: discussion.id })
 
-        setViews(prev => prev + 1);
+        // setViews(prev => prev + 1);
         // setCommentCount(selectedDiscussion.comments?.length || 0);
     };
 
@@ -246,12 +246,16 @@ const Community: React.FC<CommunityProps> = () => {
         >
             <View style={styles.discussionHeader}>
                 <View style={styles.authorInfo}>
-                    <Avatar annoymous={item?.is_anonymous} author={item.author} />
-                    {/* <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {!item?.is_annoymous ? item.author.charAt(0).toUpperCase() : "A"}
-                        </Text>
-                    </View> */}
+                    {/* <Avatar annoymous={item?.is_anonymous} author={item.author} /> */}
+                    {item?.profile_picture ? <Image
+                        source={{ uri: item?.profile_picture || 'https://via.placeholder.com/40' }}
+                        style={styles.authorAvatar}
+                    /> :
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                {!item?.is_anonymous ? item.author.charAt(0).toUpperCase() : "A"}
+                            </Text>
+                        </View>}
                     <View>
                         <Text style={styles.authorName}>{!item?.is_anonymous ? capitalizeFirstLetter(item.author) : "Annoymous"}</Text>
                         <Text style={styles.timestamp}>{formatThreadTime(item.created_at)}</Text>
@@ -620,7 +624,26 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         alignItems: 'center',
         flex: 1,
     },
-
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#3b82f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    avatarText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 16,
+    },
+    authorAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginRight: 12,
+    },
     authorName: {
         fontSize: 14,
         fontWeight: '600',
