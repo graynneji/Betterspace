@@ -32,7 +32,12 @@ export function useGetAll(
   table: string,
   options?: { orderBy?: string; ascending?: boolean },
   column: string = "*",
-  shouldRetry: boolean = false
+  shouldRetry: boolean = false,
+  staleTime?: number,
+  gcTime?: number,
+  refetchOnWindowFocus: boolean = true,
+  refetchOnReconnect: boolean = true,
+  refetchOnMount: boolean = true
 ) {
   return useQuery({
     queryKey: [table, JSON.stringify(options), column],
@@ -41,6 +46,11 @@ export function useGetAll(
       return await crudService.read(table, JSON.parse(options), column);
     },
     retry: shouldRetry ? 3 : false,
+    staleTime,
+    gcTime,
+    refetchOnWindowFocus,
+    refetchOnReconnect,
+    refetchOnMount,
   });
 }
 
@@ -49,7 +59,12 @@ export function useGetById<T>(
   filters: Partial<T>,
   column: string,
   enabled: boolean = true,
-  options?: ReadOptions
+  options?: ReadOptions,
+  staleTime?: number,
+  gcTime?: number,
+  refetchOnWindowFocus: boolean = true,
+  refetchOnReconnect: boolean = true,
+  refetchOnMount: boolean = true
 ) {
   return useQuery({
     queryKey: [table, JSON.stringify(filters), column, JSON.stringify(options)],
@@ -69,6 +84,11 @@ export function useGetById<T>(
     },
     enabled,
     retry: false,
+    staleTime,
+    gcTime,
+    refetchOnWindowFocus,
+    refetchOnReconnect,
+    refetchOnMount,
   });
 }
 

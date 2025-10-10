@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
-import { capitalizeFirstLetter } from '@/utils';
+import { capitalizeFirstLetter, formatDateTime } from '@/utils';
 import { generatePatientId } from '@/utils/uniqueId';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { sendMessage } from './session';
 
 // Define the two individual filter types
 type TherapistFilter = { therapist_id: string };
@@ -91,10 +92,11 @@ const Schedule: React.FC = () => {
     const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
     const [selectedPatient, setSelectedPatient] = useState<string>('');
     const [showPatientPicker, setShowPatientPicker] = useState<boolean>(false);
-    const createAppointmentMutaion = useCrudCreate("appointment");
+    const createAppointmentMutaion = useCrudCreate("appointment", ["messages"]);
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const styles = createStyles(colors);
+    const createMessageMutation = useCrudCreate<sendMessage>("messages")
 
     const { session } = useCheckAuth();
     const userId = session?.user?.id!;
@@ -107,6 +109,13 @@ const Schedule: React.FC = () => {
         patient_id: userId
     };
 
+    const { data: therapistIdPatientUser, isLoading, error: therapistIdPatientUserError } = useGetById(
+        "user",
+        { user_id: userId },
+        "therapist(name, therapist_id)",
+        !!userId && !isTherapist,
+        {},
+    )
     // Fetch appointments
     const { data, error, refetch } = useGetById(
         "appointment",
@@ -292,7 +301,15 @@ const Schedule: React.FC = () => {
             };
             // setEvents(prev => [...prev, newEvent]);
             const result = await createAppointmentMutaion.mutateAsync(newEvent)
-            console.log(result, "ressssult ")
+            const insertSchToMessage = {
+                sender_id: userId,
+                reciever_id: !isTherapist ? therapistIdPatientUser?.result[0].therapist?.therapist_id : selectedPatient,
+                // message: `New appointment scheduled on`,
+                message: `New appointment scheduled on ${formatDateTime(result.data.created_at)}`,
+                appointment_id: result.data.id,
+            }
+            const messageResult = await createMessageMutation.mutateAsync(insertSchToMessage)
+
             // Refetch appointments after creating
             // setTimeout(() => refetch(), 500);
         }

@@ -6,7 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { useMessage } from '@/hooks/useMessage';
-import { capitalizeFirstLetter, formatDate, formatTime, isToday } from '@/utils';
+import { capitalizeFirstLetter, formatDate, formatDateTime, formatTime, isToday } from '@/utils';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { Dispatch, SetStateAction, useEffect, useLayoutEffect, useRef, useState, } from 'react';
@@ -27,6 +27,11 @@ import {
   View
 } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
+
+interface ScheduleBubbleProps {
+  appointment: Record<string, any> // or a specific type like Appointment if you have one
+  isSender: boolean;
+}
 
 interface ChatScreenProps {
   navigation: {
@@ -72,11 +77,13 @@ type Message = {
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 };
 
-type sendMessage = {
+export type sendMessage = {
   message: string;
   sender_id: string;
   reciever_id: string;
+  appointment_id: number;
 }
+
 
 const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
   const [messageText, setMessageText] = useState('');
@@ -100,13 +107,15 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
     {
       table: "messages",
       filters: {},
-      column: '*',
+      column: '*, appointment(*)',
       options,
       pageSize: 30,
       senderId: senderId,
       receiverId,
     },
   )
+
+  console.log(messages, "mmessaggess ")
   useFocusEffect(
     React.useCallback(() => {
       if (!session?.user) return;
@@ -259,6 +268,57 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
   };
 
 
+
+  // Schedule Bubble Component
+  const ScheduleBubble = ({ appointment, isSender }: ScheduleBubbleProps) => (
+    <View style={[
+      styles.scheduleBubble,
+      isSender ? styles.senderSchedule : styles.receiverSchedule
+    ]}>
+      <View style={styles.scheduleHeader}>
+        {/* <Text style={styles.scheduleIcon}>📅</Text> */}
+        <Ionicons name="calendar-outline" size={16} color="red" />
+        <Text style={styles.scheduleTitle}>Appointment</Text>
+      </View>
+
+      <View style={styles.scheduleDetails}>
+        {/* <View style={styles.scheduleRow}>
+          <Text style={styles.scheduleLabel}>Date</Text>
+          <Text style={styles.scheduleValue}>{appointment.date}</Text>
+        </View> */}
+
+        <View style={styles.scheduleRow}>
+          <Text style={styles.scheduleLabel}>Time</Text>
+          <Text style={styles.scheduleValue}>{formatDateTime(appointment.time)}</Text>
+        </View>
+
+        {appointment.title && (
+          <View style={styles.scheduleRow}>
+            <Text style={styles.scheduleLabel}>Title</Text>
+            <Text style={styles.scheduleValue}>{appointment.title}</Text>
+          </View>
+        )}
+
+        {appointment.description && (
+          <View style={styles.scheduleRow}>
+            <Text style={styles.scheduleLabel}>Description</Text>
+            <Text style={styles.scheduleValue}>{appointment.description}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* <TouchableOpacity style={[
+        styles.scheduleButton,
+        isSender ? styles.senderButton : styles.receiverButton
+      ]}>
+        <Text style={styles.scheduleButtonText}>
+          {isSender ? 'View Details' : 'Accept'}
+        </Text>
+      </TouchableOpacity> */}
+    </View>
+  );
+
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -376,7 +436,45 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
           }
 
           const isSender = item.sender_id === senderId;
+          const isAppointment = item?.appointment?.id
           return (
+            // <View style={{ flexDirection: 'column' }}>
+            //   <View
+            //     key={item.id}
+            //     style={[
+            //       styles.messageContainer,
+            //       isSender ? styles.senderMessage : styles.receiverMessage,
+            //     ]}
+            //   >
+            //     <View
+            //       style={[
+            //         styles.messageBubble,
+            //         isSender ? styles.senderBubble : styles.receiverBubble,
+            //       ]}
+            //     >
+            //       <Text
+            //         style={[
+            //           styles.messageText,
+            //           isSender ? styles.senderText : styles.receiverText,
+            //         ]}
+            //       >
+            //         {item.message}
+            //       </Text>
+            //       <Text
+            //         style={[
+            //           styles.timestamp,
+            //           isSender ? styles.senderTimestamp : styles.receiverTimestamp,
+            //         ]}
+            //       >
+            //         {formatTime(item.created_at)}
+            //       </Text>
+
+
+            //     </View>
+            //     {isSender && <MessageStatusIcon status={item.status} />}
+            //   </View>
+            // </View>
+
             <View style={{ flexDirection: 'column' }}>
               <View
                 key={item.id}
@@ -385,32 +483,53 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
                   isSender ? styles.senderMessage : styles.receiverMessage,
                 ]}
               >
-                <View
-                  style={[
-                    styles.messageBubble,
-                    isSender ? styles.senderBubble : styles.receiverBubble,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.messageText,
-                      isSender ? styles.senderText : styles.receiverText,
-                    ]}
-                  >
-                    {item.message}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.timestamp,
-                      isSender ? styles.senderTimestamp : styles.receiverTimestamp,
-                    ]}
-                  >
-                    {formatTime(item.created_at)}
-                  </Text>
-
-
-                </View>
-                {isSender && <MessageStatusIcon status={item.status} />}
+                {isAppointment ? (
+                  // Render Schedule Bubble
+                  <View style={{ alignItems: isSender ? 'flex-end' : 'flex-start', flex: 1 }}>
+                    <ScheduleBubble
+                      appointment={item.appointment}
+                      isSender={isSender}
+                    />
+                    <Text
+                      style={[
+                        styles.timestamp,
+                        isSender ? styles.senderTimestamp : styles.receiverTimestamp,
+                        { marginTop: 4, marginRight: isSender ? 8 : 0, marginLeft: isSender ? 0 : 8 }
+                      ]}
+                    >
+                      {formatTime(item.created_at)}
+                    </Text>
+                    {isSender && <MessageStatusIcon status={item.status} />}
+                  </View>
+                ) : (
+                  // Render Regular Message Bubble
+                  <>
+                    <View
+                      style={[
+                        styles.messageBubble,
+                        isSender ? styles.senderBubble : styles.receiverBubble,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.messageText,
+                          isSender ? styles.senderText : styles.receiverText,
+                        ]}
+                      >
+                        {item.message}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.timestamp,
+                          isSender ? styles.senderTimestamp : styles.receiverTimestamp,
+                        ]}
+                      >
+                        {formatTime(item.created_at)}
+                      </Text>
+                    </View>
+                    {isSender && <MessageStatusIcon status={item.status} />}
+                  </>
+                )}
               </View>
             </View>
           );
@@ -611,8 +730,24 @@ const Session = () => {
 
   const { session } = useCheckAuth()
   const senderId = session?.user?.id!
+  const staleTime = 1000 * 60 * 60 * 24
+  const gcTime = 1000 * 60 * 60 * 24
+  const refetchOnWindowFocus = false
+  const refetchOnReconnect = false
+  const refetchOnMount = false
 
-  const { data, isLoading, error } = useGetById("user", { user_id: senderId }, "therapist(name, therapist_id, authority, license, specialization, summary)", !!senderId, {})
+  const { data, isLoading, error } = useGetById(
+    "user",
+    { user_id: senderId },
+    "therapist(name, therapist_id, authority, license, specialization, summary)",
+    !!senderId,
+    {},
+    staleTime,
+    gcTime,
+    refetchOnWindowFocus,
+    refetchOnReconnect,
+    refetchOnMount
+  )
 
   const therapist = data?.result[0]?.therapist;
 
@@ -625,6 +760,75 @@ const Session = () => {
 };
 
 const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
+  scheduleBubble: {
+    maxWidth: '85%',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1.5,
+    backgroundColor: '#FFFFFF',
+  },
+  senderSchedule: {
+    backgroundColor: '#E3F2FD',
+    borderColor: '#2196F3',
+  },
+  receiverSchedule: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#BDBDBD',
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    gap: 5,
+    borderBottomColor: '#E0E0E0',
+  },
+  scheduleIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  scheduleTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: 'red',
+  },
+  scheduleDetails: {
+    marginBottom: 12,
+  },
+  scheduleRow: {
+    marginBottom: 8,
+  },
+  scheduleLabel: {
+    fontSize: 11,
+    color: '#757575',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  scheduleValue: {
+    fontSize: 14,
+    color: '#212121',
+    fontWeight: '500',
+  },
+  scheduleButton: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  senderButton: {
+    backgroundColor: '#2196F3',
+  },
+  receiverButton: {
+    backgroundColor: '#4CAF50',
+  },
+  scheduleButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  ////////////////////////////////////////////////////////
   container: {
     flex: 1,
     backgroundColor: colors.background,

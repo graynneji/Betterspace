@@ -45,6 +45,7 @@ export default function TabLayout() {
                 name={focused ? "chatbubbles" : "chatbubbles-outline"}
                 color={color} />
             ),
+            tabBarBadge: 10
           }} />
         <Tabs.Screen
           name="schedule"

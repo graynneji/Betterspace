@@ -13,7 +13,7 @@ export class CrudAdapter {
   constructor(private client: Client) {}
 
   create<T>(table: string, payload: Partial<T>) {
-    return this.client.supabase.from(table).insert(payload);
+    return this.client.supabase.from(table).insert(payload).select().single();
   }
 
   read(
