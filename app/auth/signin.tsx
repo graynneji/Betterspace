@@ -195,7 +195,6 @@ const SignIn = () => {
                     text: 'Send Reset Link',
                     onPress: () => {
                         // Handle password reset
-                        console.log('Password reset for:', formData.email);
                         Alert.alert('Success', 'Password reset link sent to your email!');
                     }
                 }

@@ -71,21 +71,43 @@ export function getErrorMessage(err: unknown): string {
   return "Something went wrong";
 }
 
+// export const formatThreadTime = (timestamp: string): string => {
+//   const now = new Date();
+//   const postTime = new Date(timestamp);
+//   const diffInHours = Math.floor(
+//     (now.getTime() - postTime.getTime()) / (1000 * 60 * 60)
+//   );
+
+//   if (diffInHours < 1) return "Just now";
+//   if (diffInHours < 24) return `${diffInHours}h ago`;
+
+//   const diffInDays = Math.floor(diffInHours / 24);
+//   if (diffInDays < 7) return `${diffInDays}d ago`;
+
+//   const diffInWeeks = Math.floor(diffInDays / 7);
+//   return `${diffInWeeks}w ago`;
+// };
+
 export const formatThreadTime = (timestamp: string): string => {
   const now = new Date();
   const postTime = new Date(timestamp);
-  const diffInHours = Math.floor(
-    (now.getTime() - postTime.getTime()) / (1000 * 60 * 60)
-  );
+  const diffInMs = now.getTime() - postTime.getTime();
 
-  if (diffInHours < 1) return "Just now";
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-
-  const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) return `${diffInDays}d ago`;
-
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
   const diffInWeeks = Math.floor(diffInDays / 7);
-  return `${diffInWeeks}w ago`;
+  const diffInMonths = Math.floor(diffInDays / 30); // Approximation
+  const diffInYears = Math.floor(diffInDays / 365); // Approximation
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
+  if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+
+  return `${diffInYears}y ago`;
 };
 
 export function capitalizeFirstLetter(str: string | undefined): string {

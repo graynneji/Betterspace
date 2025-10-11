@@ -65,6 +65,7 @@ const More: React.FC = () => {
         name: session?.user?.user_metadata?.full_name || User.name,
         email: session?.user?.email || User.email,
         phone: "+234 (80) 123-4567", // fallback phone
+        profile: session?.user?.user_metadata?.profile_picture
     };
     const [user, setUser] = useState(initialUser);
     const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -109,7 +110,11 @@ const More: React.FC = () => {
     const signOut = async () => {
         await logout()
         //work make home "/" TODO
-        router.replace('/auth/signin')
+        if (session?.user.user_metadata?.designation === "therapist") {
+            router.replace('/auth/therapist-signin')
+        } else {
+            router.replace('/auth/signin')
+        }
     }
 
     const renderTabContent = () => {
@@ -118,9 +123,9 @@ const More: React.FC = () => {
                 return (
                     <View style={styles.tabContent}>
                         <View style={styles.profileHeader}>
-                            <Image source={{ uri: User.avatar }} style={styles.avatar} />
+                            <Image source={{ uri: user?.profile }} style={styles.avatar} />
                             <View style={styles.profileInfo}>
-                                <Text style={styles.userName}>{session?.user?.user_metadata?.full_name}</Text>
+                                <Text style={styles.userName}>{user?.name}</Text>
                                 <Text style={styles.userRole}>{session?.user?.user_metadata?.designation === "patient" ? "Therapy Client" : "Therapy provider"}</Text>
                                 <Text style={styles.therapistInfo}>
                                     {/* Therapist: {User.therapistName} */}

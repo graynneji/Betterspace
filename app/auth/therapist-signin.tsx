@@ -184,7 +184,6 @@ const TherapistSignIn = () => {
                 {
                     text: 'Send Reset Link',
                     onPress: () => {
-                        console.log('Password reset for:', formData.email);
                         Alert.alert('Success', 'Password reset link sent to your email!');
                     }
                 }
@@ -316,7 +315,7 @@ const TherapistSignIn = () => {
                         <View style={styles.switchContainer}>
                             <View style={styles.switchText}>
                                 <Text style={styles.patientLoginText}>Looking for patient login?{' '}</Text>
-                                <TouchableOpacity onPress={() => router.replace("auth/sign-in")}>
+                                <TouchableOpacity onPress={() => router.replace("auth/signin")}>
                                     <Text style={styles.switchLink}>Switch to Patient Portal</Text>
                                 </TouchableOpacity>
                             </View>

@@ -92,7 +92,7 @@ const Schedule: React.FC = () => {
     const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
     const [selectedPatient, setSelectedPatient] = useState<string>('');
     const [showPatientPicker, setShowPatientPicker] = useState<boolean>(false);
-    const createAppointmentMutaion = useCrudCreate("appointment", ["messages"]);
+    const createAppointmentMutaion = useCrudCreate("appointment", [["messages"], ["appointment"]]);
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const styles = createStyles(colors);
@@ -871,10 +871,12 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         padding: 12,
         fontSize: 16,
         backgroundColor: colors.inputBackground,
+        color: colors.inputText
     },
     textArea: {
         height: 80,
         textAlignVertical: 'top',
+        color: colors.inputText
     },
     timeButton: {
         borderWidth: 1,

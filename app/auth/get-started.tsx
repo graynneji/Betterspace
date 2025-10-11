@@ -121,7 +121,6 @@ const GetStarted = () => {
     ];
 
     const handleAnswerSelect = (questionId: string, question: string, answer: string) => {
-        console.log(questionId, question, answer, "qaws")
         setAnswers(prev => ({
             ...prev,
             [question]: answer
@@ -133,7 +132,6 @@ const GetStarted = () => {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
             // Complete questionnaire
-            console.log(answers)
             setCurrentScreen('complete');
         }
     };

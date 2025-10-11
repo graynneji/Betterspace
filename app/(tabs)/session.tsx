@@ -45,6 +45,7 @@ interface ChatScreenProps {
     license: string,
     specialization: string,
     summary: string
+    profile_picture: string;
   },
   senderId: string,
   setIsTherapist: Dispatch<SetStateAction<boolean>>
@@ -115,7 +116,6 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
     },
   )
 
-  console.log(messages, "mmessaggess ")
   useFocusEffect(
     React.useCallback(() => {
       if (!session?.user) return;
@@ -332,10 +332,14 @@ const ChatScreen = ({ navigation, therapist, senderId }: ChatScreenProps) => {
           style={styles.therapistInfo}
           onPress={() => setShowTherapistBio(true)}
         >
-          <Image
-            source={{ uri: therapistInfo.image }}
+          {therapist?.profile_picture ? <Image
+            source={{ uri: therapist?.profile_picture || 'https://via.placeholder.com/40' }}
             style={styles.headerAvatar}
-          />
+          /> : <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {therapist?.name?.charAt(0).toUpperCase() || "A"}
+            </Text>
+          </View>}
           <View>
             <Text style={styles.headerName}>{therapist?.name ? capitalizeFirstLetter(therapist.name) || 'Annoymous' : capitalizeFirstLetter(patientName)}</Text>
             {/* <Text style={{ fontSize: 12 }}>Session Provider</Text> */}
@@ -848,6 +852,21 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     alignItems: 'center',
     marginLeft: 16,
   },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  avatarText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+
   headerAvatar: {
     width: 40,
     height: 40,

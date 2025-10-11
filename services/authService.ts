@@ -57,7 +57,6 @@ export class AuthService {
 
   async checkUser(): Promise<any> {
     const { data, error } = await this.authAdapter.getUser();
-    console.log("user check", error);
     //work on this come back later and put an alert
     if (error) {
       Toast.show({

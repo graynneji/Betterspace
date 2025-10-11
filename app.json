@@ -50,7 +50,23 @@
       "favicon": "./assets/images/favicon.png",
       "bundler": "metro"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos."
+        }
+      ],
+
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Betterspace accesses your photos for you to post on community and set profile pictures."
+        }
+      ]
+    ],
     "extra": {
       "router": {},
       "eas": {

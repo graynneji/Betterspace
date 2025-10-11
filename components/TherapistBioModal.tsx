@@ -8,6 +8,7 @@ interface TherapistProps {
     specialization: string;
     license: string
     summary: string
+    profile_picture: string;
 }
 
 interface TherapistBioModalProps {
@@ -47,10 +48,14 @@ const TherapistBioModal: React.FC<TherapistBioModalProps> = ({ showTherapistBio,
                     </View>
 
                     <View style={styles.bioContent}>
-                        <Image
-                            source={{ uri: therapistInfo.image }}
+                        {therapist?.profile_picture ? <Image
+                            source={{ uri: therapist?.profile_picture }}
                             style={styles.therapistImage}
-                        />
+                        /> : <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>
+                                {therapist.name.charAt(0).toUpperCase() || "A"}
+                            </Text>
+                        </View>}
                         <Text style={styles.therapistName}>{therapist?.name}</Text>
                         <Text style={styles.therapistSpecialty}>{therapistInfo.specialty}</Text>
 
@@ -75,11 +80,16 @@ const TherapistBioModal: React.FC<TherapistBioModalProps> = ({ showTherapistBio,
 
                         <Text style={styles.bioSectionTitle}>Specializations</Text>
                         <View style={styles.specializationsContainer}>
-                            {therapistInfo.specializations.map((spec, index) => (
+
+                            <View style={styles.specializationTag}>
+                                <Text style={styles.specializationText}>{therapist?.specialization}</Text>
+                            </View>
+
+                            {/* {therapistInfo.specializations.map((spec, index) => (
                                 <View key={index} style={styles.specializationTag}>
                                     <Text style={styles.specializationText}>{spec}</Text>
                                 </View>
-                            ))}
+                            ))} */}
                         </View>
 
                         <Text style={styles.bioSectionTitle}>About</Text>
@@ -128,6 +138,21 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         alignSelf: 'center',
         marginBottom: 16,
+    },
+    avatar: {
+        width: 70,
+        height: 70,
+        borderRadius: 50,
+        backgroundColor: '#3b82f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        marginBottom: 16
+    },
+    avatarText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 26,
     },
     therapistName: {
         fontSize: 24,

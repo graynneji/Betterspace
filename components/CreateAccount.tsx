@@ -110,7 +110,7 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
                 email: formData.email,
                 // role: options ? selectedQuesAnswers : undefined,
                 // selected: !options ? JSON.stringify(selectedQuesAnswers) : undefined,
-                selected: answers,
+                selected_answers: [answers],
                 therapist_id: randomTherapistId,
                 // ip: location.geoplugin_request,
                 // city: location.geoplugin_city,
@@ -122,11 +122,11 @@ const CreateAccount: React.FC<QuestionAireAnswersProps> = ({ answers }) => {
 
             if (result.error) throw new Error(result.error.message);
             const therapist = await patientMutation.mutateAsync({
-                patient_id: signUpData.user.id,
+                patient_id: signUpData?.user?.id,
                 therapist: randomTherapistId,
                 name: formData.fullName,
                 email: formData.email,
-                selected: answers,
+                selected_answers: [answers],
             })
 
             if (therapist.error) throw new Error(therapist.error.message);

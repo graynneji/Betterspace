@@ -1,4 +1,6 @@
+import ImageViewer from '@/components/ImageViewer';
 import { Colors } from '@/constants/Colors';
+import { useCheckAuth } from '@/context/AuthContext';
 import { useCrudCreate, useGetById } from '@/hooks/useCrud';
 import { capitalizeFirstLetter } from '@/utils';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,9 +20,7 @@ import {
     View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-// import Avatar from '../../components/Avatar';
-import { useCheckAuth } from '@/context/AuthContext';
-import { categories, Discussion, getCategoryColor, getCategoryIcon } from './community';
+import { Discussion, getCategoryColor, getCategoryIcon } from './community';
 
 
 interface Author {
@@ -40,29 +40,11 @@ export interface Comment {
     content: string;
     author: string;
     created_at: string;
-    // likes: number;
-    // isLiked: boolean;
     user_id: string;
     article_likes: LikesProps[];
     article_id: string;
     profile_picture?: string
 }
-
-// interface Discussion {
-//     id: string;
-//     title: string;
-//     content: string;
-//     author: string;
-//     category_id: number;
-//     created_at: string;
-//     // likes: number;
-//     // isLiked: boolean;
-//     is_annoymous?: boolean
-//     views: number;
-//     is_urgent?: boolean;
-//     article_comments?: Comment[];
-//     article_likes?: LikesProps[];
-// }
 
 interface Category {
     id: number;
@@ -72,7 +54,6 @@ interface Category {
 }
 
 interface DiscussionViewProps {
-    // discussion: Discussion;
     setShowDiscussionView: (show: boolean) => void;
     categories: Category[];
     getCategoryIcon: (categoryId: number) => keyof typeof Ionicons.glyphMap;
@@ -83,60 +64,33 @@ interface DiscussionViewProps {
     handleLikes: (userId: string, discussionId: string) => Promise<void>;
 }
 
-const DiscussionView: React.FC<DiscussionViewProps> = ({
-    // discussion,
-    // setShowDiscussionView,
-    // categories,
-    // getCategoryIcon,
-    // getCategoryColor,
-    // setCommentCount,
-    // commentCount,
-    // views,
-    // handleLikes,
-}) => {
+const DiscussionView: React.FC<DiscussionViewProps> = ({ }) => {
     const params = useLocalSearchParams();
     const discussion: Discussion = params.discussion ? JSON.parse(params.discussion as string) : {};
     const initialLikes = { result: discussion?.article_likes || [], count: discussion?.article_likes?.length || 0 }
     const [likes, setLikes] = useState<{ result: LikesProps[] | null; count: number | null }>(initialLikes);
-    // console.log(discussion, "comments")
     const [comments, setComments] = useState<Comment[]>(discussion?.article_comments || []);
     const [newComment, setNewComment] = useState<string>('');
     const { session } = useCheckAuth()
-    // const [discussion, setDiscussion] = useState()
-    // const [isLiked, setIsLiked] = useState<boolean>(discussion.isLiked || false);
-    // const [likes, setLikes] = useState<number>(discussion.likes || 0);
     const router = useRouter()
     const colorScheme = useColorScheme();
     const colors = Colors[colorScheme ?? 'light'];
     const styles = createStyles(colors);
-    // const { session } = useCheckAuth()
-    // const userId = session?.user?.id!
     const createCommentMutation = useCrudCreate("article_comments")
     const { data, isLoading, error } = useGetById("article_comments", { article_id: discussion?.id }, "*", !!discussion?.id, {})
     const { data: likesData, isLoading: likesLoading, error: likesError } = useGetById(
         "article_likes",
         { discussion_id: discussion?.id },
-        // {},
         "*",
         !!discussion?.id,
-        // { match: { user_id: params?.userId, discussion_id: discussion?.id } },
         {}
     );
     const createLikesMutation = useCrudCreate("article_likes", [["article_likes"], ["article"]])
-    // if (error) {
-    //     Toast.show({
-    //         type: 'error',
-    //         text1: 'Error Occurred',
-    //         text2: 'Something went wrong. Please try again.',
-    //         visibilityTime: 2000,
-    //         autoHide: true,
-    //         topOffset: 60,
-    //     });
-    // }
 
     useEffect(() => {
         setLikes(likesData ?? initialLikes);
     }, [likesData]);
+
     const formatTime = (timestamp: string): string => {
         const now = new Date();
         const postTime = new Date(timestamp);
@@ -160,7 +114,6 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
         );
         if (alreadyLiked) return;
 
-        // Build optimistic like
         const optimisticLike: LikesProps = {
             user_id: params.userId as string,
             discussion_id: discussion.id,
@@ -168,20 +121,17 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
             created_at: new Date().toISOString(),
         };
 
-        // ✅ Apply optimistic update
         setLikes((prev) => ({
             result: [...(prev?.result ?? []), optimisticLike],
             count: (prev?.count ?? 0) + 1,
         }));
 
         try {
-            // Call API
             const likeResult = await createLikesMutation.mutateAsync({
                 user_id: params.userId,
                 discussion_id: discussion.id,
             });
 
-            // Replace optimistic like with server response
             setLikes((prev) => ({
                 result: (prev?.result ?? []).map((like) =>
                     like.id === optimisticLike.id && likeResult && typeof likeResult === "object" && "user_id" in likeResult && "id" in likeResult
@@ -191,99 +141,56 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                 count: prev?.count ?? 0,
             }));
         } catch (err) {
-            // ❌ Rollback on failure
             setLikes((prev) => ({
                 result: (prev?.result ?? []).filter(
                     (like) => like.id !== optimisticLike.id
                 ),
                 count: Math.max((prev?.count ?? 1) - 1, 0),
             }));
-            // console.error("Like failed:", err);
         }
     };
 
     const handleAddComment = async (): Promise<void> => {
         Keyboard.dismiss()
         if (newComment.trim()) {
-            // const comment: Comment = {
-            //     id: Date.now().toString(),
-            //     content: newComment,
-            //     author: {
-            //         id: 'current-user',
-            //         name: 'Current User', // Replace with actual user
-            //         avatar: 'https://via.placeholder.com/32',
-            //     },
-            //     timestamp: new Date().toISOString(),
-            //     likes: 0,
-            //     isLiked: false,
-            // };
             const comment = {
                 content: newComment,
                 user_id: params?.userId,
                 author: params?.fullName,
-                // author: session?.user?.user_metadata?.full_name,
                 article_id: discussion.id,
                 profile_picture: session?.user?.user_metadata?.profile_picture
-
             };
             await createCommentMutation.mutateAsync(comment)
-            // setComments([...comments, comment]);
-            // setCommentCount(comments.length + 1);
             setNewComment('');
         }
     };
 
-    //     const handleCommentLike = async (commentId: string): Promise<void> => {
-
-    //           if (data?.result && data?.result?.length > 0) {
-    //     // already liked, don't insert again
-    //     return;
-    //   }
-    //   const post = {
-    //     user_id: userId,
-    //     discussion_id: discussion?.id,
-    //   };
-    //   createLikesMutation.mutateAsync(post)
-
-    //     };
-
     const renderComment = (comment: Comment) => (
-        <View key={comment.id} style={styles.commentCard} >
-            <View style={styles.commentHeader}>
-                {/* <Image
-                    source={{ uri: comment.author.avatar }}
-                    style={styles.commentAvatar}
-                /> */}
-                {/* <Avatar annoymous={false} author={comment.author} /> */}
-                {comment?.profile_picture ? <Image
-                    source={{ uri: comment?.profile_picture || 'https://via.placeholder.com/40' }}
-                    style={styles.authorAvatar}
-                /> :
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
+        <View key={comment.id} style={styles.commentCard}>
+            <View style={styles.commentContent}>
+                {comment?.profile_picture ?
+                    <Image
+                        source={{ uri: comment?.profile_picture || 'https://via.placeholder.com/40' }}
+                        style={styles.commentAvatar}
+                    /> :
+                    <View style={styles.commentAvatarPlaceholder}>
+                        <Text style={styles.commentAvatarText}>
                             {comment?.author.charAt(0).toUpperCase() || "A"}
                         </Text>
-                    </View>}
-                <View style={styles.commentAuthorInfo}>
-                    <Text style={styles.commentAuthorName}>{capitalizeFirstLetter(comment.author)}</Text>
-                    <Text style={styles.commentTime}>{formatTime(comment.created_at)}</Text>
+                    </View>
+                }
+
+                <View style={styles.commentMain}>
+                    <View style={styles.commentHeader}>
+                        <Text style={styles.commentAuthorName}>
+                            {capitalizeFirstLetter(comment.author)}
+                        </Text>
+                        <Text style={styles.commentTime}>· {formatTime(comment.created_at)}</Text>
+                    </View>
+                    <Text style={styles.commentText}>{comment.content}</Text>
                 </View>
-
-                {/* <TouchableOpacity
-                    style={styles.commentLikeBtn}
-                // onPress={() => handleCommentLike(comment.id)}
-                >
-                    <Ionicons
-                        name={comment.article_likes.length > 0 ? "heart" : "heart-outline"}
-                        size={16}
-                        color={comment.article_likes.length > 0 ? "#ef4444" : "#6b7280"}
-                    />
-                    <Text style={styles.commentLikes}>{comment.article_likes.length}</Text>
-                </TouchableOpacity> */}
             </View>
-
-            <Text style={styles.commentContent}>{comment.content}</Text>
-        </View >
+        </View>
     );
 
     return (
@@ -301,117 +208,103 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         <Ionicons name="arrow-back" size={24} color={colors.text} />
                     </TouchableOpacity>
 
-                    <Text style={styles.headerTitle}>Discussion</Text>
+                    <Text style={styles.headerTitle}>Thread</Text>
 
                     <TouchableOpacity style={styles.moreBtn}>
-                        <Ionicons name="ellipsis-horizontal" size={24} color={colors.textTertiary} />
+                        <Ionicons name="ellipsis-horizontal" size={24} color={colors.textSecondary} />
                     </TouchableOpacity>
                 </View>
 
                 <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Discussion Content */}
-                    <View style={styles.discussionCard}>
-                        {/* Author Info */}
-                        <View style={styles.discussionHeader}>
-                            <View style={styles.authorInfo}>
-                                {/* <Avatar annoymous={discussion?.is_anonymous} author={discussion.author} picture={discussion?.profile_picture} /> */}
-                                {discussion?.profile_picture ? <Image
+                    {/* Main Post */}
+                    <View style={styles.mainPost}>
+                        <View style={styles.postContent}>
+                            {discussion?.profile_picture ?
+                                <Image
                                     source={{ uri: discussion?.profile_picture || 'https://via.placeholder.com/40' }}
                                     style={styles.authorAvatar}
                                 /> :
-                                    <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>
-                                            {!discussion?.is_anonymous ? discussion.author.charAt(0).toUpperCase() : "A"}
-                                        </Text>
-                                    </View>}
-                                <View style={styles.authorDetails}>
-                                    <Text style={styles.authorName}>{capitalizeFirstLetter(discussion.author)}</Text>
-                                    <Text style={styles.postTime}>{formatTime(discussion.created_at)}</Text>
+                                <View style={styles.avatar}>
+                                    <Text style={styles.avatarText}>
+                                        {!discussion?.is_anonymous ? discussion.author.charAt(0).toUpperCase() : "A"}
+                                    </Text>
                                 </View>
-                            </View>
+                            }
 
-                            <View style={[
-                                styles.categoryBadge,
-                                { backgroundColor: `${getCategoryColor(discussion.category_id)}20` }
-                            ]}>
-                                <Ionicons
-                                    name={getCategoryIcon(discussion.category_id)}
-                                    size={14}
-                                    color={getCategoryColor(discussion.category_id)}
-                                />
-                                <Text style={[
-                                    styles.categoryText,
-                                    { color: getCategoryColor(discussion.category_id) }
-                                ]}>
-                                    {categories[discussion.category_id].name}
-                                    {/* {discussion.category_name} */}
-                                </Text>
-                            </View>
-                        </View>
+                            <View style={styles.postMain}>
+                                <View style={styles.postHeader}>
+                                    <View style={styles.authorRow}>
+                                        <Text style={styles.authorName}>
+                                            {capitalizeFirstLetter(discussion.author)}
+                                        </Text>
+                                        <Text style={styles.postTime}>· {formatTime(discussion.created_at)}</Text>
+                                    </View>
+                                    <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(discussion.category_id) }]}>
+                                        <Ionicons
+                                            name={getCategoryIcon(discussion.category_id)}
+                                            size={11}
+                                            color="white"
+                                        />
+                                    </View>
+                                </View>
 
-                        {/* Title */}
-                        {discussion?.title && <Text style={styles.discussionTitle}>{discussion.title}</Text>}
+                                {discussion?.title && (
+                                    <Text style={styles.discussionTitle}>{discussion.title}</Text>
+                                )}
 
-                        {/* Content */}
-                        <Text style={styles.discussionContent}>{discussion.content}</Text>
+                                <Text style={styles.discussionContent}>{discussion.content}</Text>
+                                <ImageViewer images={discussion.image} />
 
-                        {/* Stats */}
-                        <View style={styles.discussionStats}>
-                            <TouchableOpacity
-                                activeOpacity={1}
-                                style={styles.statButton}
-                                onPress={handleLikePress}
-                            >
-                                <Ionicons
-                                    name={likes?.result?.some(like => like.user_id === params?.userId) ? "heart" : "heart-outline"}
-                                    size={20}
-                                    color={likes?.result?.some(like => like.user_id === params?.userId) ? "#ef4444" : "#6b7280"}
-                                />
-                                <Text style={[
-                                    styles.statText,
-                                    false && styles.statTextLiked
-                                ]}>
-                                    {(likes?.result?.length || 0)}
-                                </Text>
-                            </TouchableOpacity>
+                                {/* Stats */}
+                                <View style={styles.statsRow}>
+                                    <TouchableOpacity
+                                        activeOpacity={0.7}
+                                        style={styles.statButton}
+                                        onPress={handleLikePress}
+                                    >
+                                        <Ionicons
+                                            name={likes?.result?.some(like => like.user_id === params?.userId) ? "heart" : "heart-outline"}
+                                            size={20}
+                                            color={likes?.result?.some(like => like.user_id === params?.userId) ? "#ef4444" : colors.textSecondary}
+                                        />
+                                        <Text style={styles.statText}>
+                                            {(likes?.result?.length || 0)}
+                                        </Text>
+                                    </TouchableOpacity>
 
-                            <View style={styles.statButton}>
-                                <Ionicons name="chatbubble-outline" size={20} color="#6b7280" />
-                                <Text style={styles.statText}>{data?.result?.length || 0}</Text>
-                            </View>
+                                    <View style={styles.statButton}>
+                                        <Ionicons name="chatbubble-outline" size={20} color={colors.textSecondary} />
+                                        <Text style={styles.statText}>{data?.result?.length || 0}</Text>
+                                    </View>
 
-                            <View style={styles.statButton}>
-                                <Ionicons name="eye-outline" size={20} color="#6b7280" />
-                                <Text style={styles.statText}>{discussion?.views}</Text>
+                                    <View style={styles.statButton}>
+                                        <Ionicons name="eye-outline" size={20} color={colors.textSecondary} />
+                                        <Text style={styles.statText}>{discussion?.views}</Text>
+                                    </View>
+                                </View>
                             </View>
                         </View>
                     </View>
 
                     {/* Comments Section */}
-                    <View style={styles.commentsSection}>
-                        <Text style={styles.commentsTitle}>
-                            Comments ({data?.result?.length || 0})
-                        </Text>
-
-                        {data?.result?.length === 0 ? (
-                            <View style={styles.noComments}>
-                                <Ionicons name="chatbubbles-outline" size={32} color="#d1d5db" />
-                                <Text style={styles.noCommentsText}>No comments yet</Text>
-                                <Text style={styles.noCommentsSubtext}>Be the first to share your thoughts</Text>
-                            </View>
-                        ) : (
-                            <View style={styles.commentsList}>
-                                {data?.result?.map(renderComment)}
-                            </View>
-                        )}
-                    </View>
+                    {data?.result?.length === 0 ? (
+                        <View style={styles.noComments}>
+                            <Ionicons name="chatbubbles-outline" size={48} color={colors.textTertiary} />
+                            <Text style={styles.noCommentsText}>No replies yet</Text>
+                            <Text style={styles.noCommentsSubtext}>Be the first to reply</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.commentsList}>
+                            {data?.result?.map(renderComment)}
+                        </View>
+                    )}
                 </ScrollView>
 
                 {/* Comment Input */}
                 <View style={styles.commentInputContainer}>
                     <TextInput
                         style={styles.commentInput}
-                        placeholder="Add a thoughtful comment..."
+                        placeholder="Reply to this thread..."
                         value={newComment}
                         onChangeText={setNewComment}
                         multiline
@@ -429,7 +322,7 @@ const DiscussionView: React.FC<DiscussionViewProps> = ({
                         <Ionicons
                             name="send"
                             size={20}
-                            color={newComment.trim() ? "#3b82f6" : "#d1d5db"}
+                            color={newComment.trim() ? colors.primary : colors.textTertiary}
                         />
                     </TouchableOpacity>
                 </View>
@@ -444,21 +337,13 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
-        // backgroundColor: 'white',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 5,
-        // paddingVertical: 12,
-        // borderBottomWidth: 1,
-        // borderBottomColor: '#e5e7eb',
-        // elevation: 2,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 1 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 3,
-        marginBottom: 5,
+        paddingVertical: 12,
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.border,
     },
     backBtn: {
         padding: 4,
@@ -473,31 +358,16 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
     },
     content: {
         flex: 1,
+    },
+    mainPost: {
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.border,
+        paddingBottom: 16,
+    },
+    postContent: {
+        flexDirection: 'row',
         paddingHorizontal: 16,
-    },
-    discussionCard: {
-        backgroundColor: colors.surface,
-        borderRadius: 12,
-        padding: 20,
-        marginTop: 16,
-        // elevation: 1,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 1 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 3,
-        borderColor: colors.border,
-        borderWidth: 1,
-    },
-    discussionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 16,
-    },
-    authorInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 1,
+        paddingTop: 16,
     },
     avatar: {
         width: 40,
@@ -506,7 +376,6 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         backgroundColor: '#3b82f6',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
     },
     avatarText: {
         color: 'white',
@@ -517,10 +386,20 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        marginRight: 12,
     },
-    authorDetails: {
+    postMain: {
         flex: 1,
+        marginLeft: 12,
+    },
+    postHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    authorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     authorName: {
         fontSize: 16,
@@ -528,147 +407,130 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         color: colors.text,
     },
     postTime: {
-        fontSize: 13,
+        fontSize: 15,
         color: colors.textSecondary,
-        marginTop: 2,
+        marginLeft: 4,
     },
     categoryBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 16,
-        marginLeft: 12,
-    },
-    categoryText: {
-        fontSize: 12,
-        fontWeight: '500',
-        marginLeft: 6,
-        textTransform: 'capitalize',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 10,
     },
     discussionTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '700',
         color: colors.text,
-        marginBottom: 12,
-        lineHeight: 28,
+        marginBottom: 8,
+        lineHeight: 24,
     },
     discussionContent: {
         fontSize: 16,
-        color: colors.textSecondary,
-        lineHeight: 24,
-        marginBottom: 20,
+        color: colors.text,
+        lineHeight: 22,
+        marginBottom: 16,
     },
-    discussionStats: {
+    statsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 16,
-        borderTopWidth: 1,
-        borderTopColor: colors.divider,
+        gap: 4,
+        paddingTop: 12,
+        borderTopWidth: 0.5,
+        borderTopColor: colors.border,
     },
     statButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 24,
+        gap: 6,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        marginRight: 8,
     },
     statText: {
         fontSize: 14,
         color: colors.textSecondary,
-        marginLeft: 6,
-        fontWeight: '500',
-    },
-    statTextLiked: {
-        color: '#ef4444',
-    },
-    commentsSection: {
-        backgroundColor: colors.surface,
-        borderRadius: 12,
-        padding: 16,
-        marginTop: 16,
-        marginBottom: 16,
-        // elevation: 1,
-        // shadowColor: '#000',
-        // shadowOffset: { width: 0, height: 1 },
-        // shadowOpacity: 0.1,
-        // shadowRadius: 3,
-        borderColor: colors.border,
-        borderWidth: 1,
-    },
-    commentsTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.text,
-        marginBottom: 16,
+        fontWeight: '400',
     },
     noComments: {
         alignItems: 'center',
-        paddingVertical: 32,
+        paddingVertical: 48,
+        paddingHorizontal: 32,
     },
     noCommentsText: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: colors.textSecondary,
-        marginTop: 12,
+        fontSize: 18,
+        fontWeight: '600',
+        color: colors.text,
+        marginTop: 16,
     },
     noCommentsSubtext: {
         fontSize: 14,
-        color: colors.textTertiary,
-        marginTop: 4,
+        color: colors.textSecondary,
+        marginTop: 6,
     },
     commentsList: {
-        gap: 16,
+        paddingTop: 0,
     },
     commentCard: {
-        padding: 16,
-        backgroundColor: colors.item,
-        borderRadius: 12,
+        backgroundColor: colors.background,
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.border,
+    },
+    commentContent: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+    },
+    commentAvatarPlaceholder: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#3b82f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    commentAvatarText: {
+        color: 'white',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    commentAvatar: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+    },
+    commentMain: {
+        flex: 1,
+        marginLeft: 12,
     },
     commentHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
-    },
-    commentAvatar: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        marginRight: 8,
-    },
-    commentAuthorInfo: {
-        flex: 1,
+        marginBottom: 4,
     },
     commentAuthorName: {
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
         color: colors.text,
     },
     commentTime: {
-        fontSize: 12,
-        color: colors.textTertiary,
-    },
-    commentLikeBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    commentLikes: {
-        fontSize: 12,
+        fontSize: 14,
         color: colors.textSecondary,
         marginLeft: 4,
     },
-    commentContent: {
-        fontSize: 14,
-        color: colors.textSecondary,
+    commentText: {
+        fontSize: 15,
+        color: colors.text,
         lineHeight: 20,
     },
     commentInputContainer: {
-        // backgroundColor: 'white',
         flexDirection: 'row',
         alignItems: 'flex-end',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: 'transparent',
-        // borderTopColor: colors.inputBorder,
+        borderTopWidth: 0.5,
+        borderTopColor: colors.border,
+        backgroundColor: colors.background,
     },
     commentInput: {
         flex: 1,
@@ -676,9 +538,9 @@ const createStyles = (colors: typeof Colors.light) => StyleSheet.create({
         borderColor: colors.inputBorder,
         borderRadius: 20,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 10,
         maxHeight: 100,
-        fontSize: 14,
+        fontSize: 15,
         backgroundColor: colors.inputBackground,
         color: colors.inputText,
     },

@@ -56,8 +56,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data } = await authService
           .checkUser()
           .catch(() => ({ data: { session: null } }));
-
-        setSession(data?.session ?? null);
+        const { access_token, refresh_token, ...safeSession } = data.session;
+        setSession(safeSession as Session);
+        // setSession(data?.session ?? null);
       } catch (err) {
         setSession(null)
       } finally {
@@ -84,7 +85,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
-  // 👇 runs whenever session changes
   useEffect(() => { }, [session]);
 
   const login = async (email: string, password: string) => {
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  async function register<T>(fullName: string, email: string, password: string, others: Partial<T>) {
+  async function register<T>(email: string, password: string, others: Partial<T>) {
     setLoading(true);
     try {
       const result = await authService.register(email, password, others);
